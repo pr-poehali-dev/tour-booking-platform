@@ -81,9 +81,11 @@ export default function Index() {
             </nav>
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>
-                <Link to="/dashboard">Личный кабинет</Link>
+                <Link to="/login">Вход</Link>
               </Button>
-              <Button>Регистрация</Button>
+              <Button asChild>
+                <Link to="/register">Регистрация</Link>
+              </Button>
             </div>
           </div>
         </div>
