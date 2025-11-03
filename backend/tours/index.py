@@ -176,6 +176,60 @@ def handle_availability(event: Dict[str, Any], conn) -> Dict[str, Any]:
         })
     }
 
+def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
+    body_data = json.loads(event.get('body', '{}'))
+    
+    required_fields = ['title', 'city', 'price', 'duration', 'short_description', 'full_description']
+    for field in required_fields:
+        if not body_data.get(field):
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'{field} is required'}),
+                'isBase64Encoded': False
+            }
+    
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO tours (
+            title, city, country, price, duration, 
+            short_description, full_description, 
+            image_url, guide_id, status, instant_booking,
+            rating, reviews_count, max_guests
+        ) VALUES (
+            %s, %s, %s, %s, %s, 
+            %s, %s, 
+            %s, 1, 'pending', %s,
+            0, 0, 10
+        ) RETURNING id
+    """, (
+        body_data['title'],
+        body_data['city'],
+        body_data.get('country', ''),
+        float(body_data['price']),
+        int(body_data['duration']),
+        body_data['short_description'],
+        body_data['full_description'],
+        body_data.get('image_url', ''),
+        body_data.get('instant_booking', False)
+    ))
+    
+    tour_id = cursor.fetchone()['id']
+    conn.commit()
+    cursor.close()
+    
+    return {
+        'statusCode': 201,
+        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+        'isBase64Encoded': False,
+        'body': json.dumps({
+            'success': True,
+            'tour_id': tour_id,
+            'message': 'Tour created successfully'
+        })
+    }
+
 def handle_moderation(event: Dict[str, Any], conn) -> Dict[str, Any]:
     body_data = json.loads(event.get('body', '{}'))
     tour_id = body_data.get('tour_id')
@@ -207,7 +261,7 @@ def handle_moderation(event: Dict[str, Any], conn) -> Dict[str, Any]:
         instant_booking = False
     
     cursor.execute(
-        """UPDATE t_p71176016_tour_booking_platfor.tours
+        """UPDATE tours
         SET status = %s,
             instant_booking = %s,
             updated_at = CURRENT_TIMESTAMP
@@ -261,12 +315,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if action == 'moderate':
                 return handle_moderation(event, conn)
             else:
-                return {
-                    'statusCode': 400,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Invalid action for POST'}),
-                    'isBase64Encoded': False
-                }
+                return handle_create_tour(event, conn)
         
         else:
             return {

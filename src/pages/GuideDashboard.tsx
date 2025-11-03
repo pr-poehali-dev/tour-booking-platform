@@ -17,13 +17,29 @@ import Icon from '@/components/ui/icon';
 import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
 import { bookingApi } from '@/lib/bookingApi';
+import { toursApi, CreateTourData } from '@/lib/toursApi';
+import { useToast } from '@/hooks/use-toast';
 
 export default function GuideDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tours');
   const [isCreatingTour, setIsCreatingTour] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newTourData, setNewTourData] = useState({
+    title: '',
+    city: '',
+    country: '',
+    price: '',
+    duration: '',
+    shortDescription: '',
+    fullDescription: '',
+    groupSize: '',
+    languages: '',
+    instantBooking: false
+  });
 
   const [guide, setGuide] = useState({
     name: 'Анна Новикова',
@@ -65,6 +81,75 @@ export default function GuideDashboard() {
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/');
+  };
+
+  const handleCreateTour = async () => {
+    if (!newTourData.title || !newTourData.city || !newTourData.price || !newTourData.duration || !newTourData.shortDescription || !newTourData.fullDescription) {
+      toast({
+        title: "Заполните все обязательные поля",
+        description: "Пожалуйста, заполните все поля, отмеченные звездочкой",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const durationMap: Record<string, number> = {
+        '2-3h': 180,
+        'half-day': 300,
+        'full-day': 480,
+        '2-3days': 1440,
+        'week': 10080
+      };
+
+      const tourData: CreateTourData = {
+        title: newTourData.title,
+        city: newTourData.city,
+        country: newTourData.country || 'Россия',
+        price: parseFloat(newTourData.price),
+        duration: durationMap[newTourData.duration] || 480,
+        short_description: newTourData.shortDescription,
+        full_description: newTourData.fullDescription,
+        group_size: newTourData.groupSize || 'до 10 человек',
+        languages: newTourData.languages || 'Русский',
+        available_dates: selectedDates.map(d => d.toISOString()),
+        instant_booking: newTourData.instantBooking,
+        image_url: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg'
+      };
+
+      await toursApi.createTour(tourData);
+
+      toast({
+        title: "Тур создан!",
+        description: "Ваш тур отправлен на модерацию. После проверки он появится в каталоге."
+      });
+
+      setIsCreatingTour(false);
+      setNewTourData({
+        title: '',
+        city: '',
+        country: '',
+        price: '',
+        duration: '',
+        shortDescription: '',
+        fullDescription: '',
+        groupSize: '',
+        languages: '',
+        instantBooking: false
+      });
+      setSelectedDates([]);
+      
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Ошибка создания тура",
+        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const tours = [
@@ -265,28 +350,49 @@ export default function GuideDashboard() {
                     <div className="grid gap-4">
                       <div>
                         <Label htmlFor="title">Название тура *</Label>
-                        <Input id="title" placeholder="Например: Исторический центр Праги" />
+                        <Input 
+                          id="title" 
+                          placeholder="Например: Исторический центр Праги"
+                          value={newTourData.title}
+                          onChange={(e) => setNewTourData({...newTourData, title: e.target.value})}
+                        />
                       </div>
                       
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="city">Город *</Label>
-                          <Input id="city" placeholder="Прага" />
+                          <Input 
+                            id="city" 
+                            placeholder="Прага"
+                            value={newTourData.city}
+                            onChange={(e) => setNewTourData({...newTourData, city: e.target.value})}
+                          />
                         </div>
                         <div>
                           <Label htmlFor="country">Страна *</Label>
-                          <Input id="country" placeholder="Чехия" />
+                          <Input 
+                            id="country" 
+                            placeholder="Чехия"
+                            value={newTourData.country}
+                            onChange={(e) => setNewTourData({...newTourData, country: e.target.value})}
+                          />
                         </div>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="price">Цена (₽) *</Label>
-                          <Input id="price" type="number" placeholder="3500" />
+                          <Input 
+                            id="price" 
+                            type="number" 
+                            placeholder="3500"
+                            value={newTourData.price}
+                            onChange={(e) => setNewTourData({...newTourData, price: e.target.value})}
+                          />
                         </div>
                         <div>
                           <Label htmlFor="duration">Длительность *</Label>
-                          <Select>
+                          <Select value={newTourData.duration} onValueChange={(value) => setNewTourData({...newTourData, duration: value})}>
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите длительность" />
                             </SelectTrigger>
@@ -307,6 +413,8 @@ export default function GuideDashboard() {
                           id="description" 
                           placeholder="Опишите тур в 1-2 предложениях"
                           rows={2}
+                          value={newTourData.shortDescription}
+                          onChange={(e) => setNewTourData({...newTourData, shortDescription: e.target.value})}
                         />
                       </div>
 
@@ -316,17 +424,29 @@ export default function GuideDashboard() {
                           id="fullDescription" 
                           placeholder="Подробно опишите программу тура, что увидят туристы, что включено..."
                           rows={6}
+                          value={newTourData.fullDescription}
+                          onChange={(e) => setNewTourData({...newTourData, fullDescription: e.target.value})}
                         />
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="groupSize">Размер группы *</Label>
-                          <Input id="groupSize" placeholder="до 8 человек" />
+                          <Input 
+                            id="groupSize" 
+                            placeholder="до 8 человек"
+                            value={newTourData.groupSize}
+                            onChange={(e) => setNewTourData({...newTourData, groupSize: e.target.value})}
+                          />
                         </div>
                         <div>
                           <Label htmlFor="languages">Языки *</Label>
-                          <Input id="languages" placeholder="Русский, Английский, Чешский" />
+                          <Input 
+                            id="languages" 
+                            placeholder="Русский, Английский, Чешский"
+                            value={newTourData.languages}
+                            onChange={(e) => setNewTourData({...newTourData, languages: e.target.value})}
+                          />
                         </div>
                       </div>
 
@@ -366,28 +486,26 @@ export default function GuideDashboard() {
                               Клиенты могут забронировать без вашего подтверждения
                             </p>
                           </div>
-                          <Switch />
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label>Отправлять уведомления в Telegram</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Получайте уведомления о новых бронированиях
-                            </p>
-                          </div>
-                          <Switch defaultChecked />
+                          <Switch 
+                            checked={newTourData.instantBooking}
+                            onCheckedChange={(checked) => setNewTourData({...newTourData, instantBooking: checked})}
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCreatingTour(false)}>
+                    <Button variant="outline" onClick={() => setIsCreatingTour(false)} disabled={isSubmitting}>
                       Отмена
                     </Button>
-                    <Button onClick={() => setIsCreatingTour(false)}>
-                      Отправить на модерацию
+                    <Button onClick={handleCreateTour} disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                          Отправка...
+                        </>
+                      ) : 'Отправить на модерацию'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

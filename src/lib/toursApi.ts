@@ -33,6 +33,21 @@ export interface ToursFilters {
   offset?: number;
 }
 
+export interface CreateTourData {
+  title: string;
+  city: string;
+  country: string;
+  price: number;
+  duration: number;
+  short_description: string;
+  full_description: string;
+  group_size: string;
+  languages: string;
+  available_dates: string[];
+  instant_booking: boolean;
+  image_url?: string;
+}
+
 export const toursApi = {
   async getTours(filters?: ToursFilters): Promise<ToursResponse> {
     const params = new URLSearchParams();
@@ -52,6 +67,23 @@ export const toursApi = {
     
     if (!response.ok) {
       throw new Error('Failed to fetch tours');
+    }
+    
+    return await response.json();
+  },
+
+  async createTour(tourData: CreateTourData): Promise<Tour> {
+    const response = await fetch(TOURS_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tourData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create tour');
     }
     
     return await response.json();
