@@ -76,7 +76,9 @@ export default function Index() {
               <a href="#contacts" className="text-foreground hover:text-primary transition-colors">Контакты</a>
             </nav>
             <div className="flex items-center gap-3">
-              <Button variant="ghost">Войти</Button>
+              <Button variant="ghost" asChild>
+                <Link to="/dashboard">Личный кабинет</Link>
+              </Button>
               <Button>Регистрация</Button>
             </div>
           </div>
