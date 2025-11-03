@@ -20,10 +20,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://your-backend-url/auth/login', {
+      const response = await fetch('https://functions.poehali.dev/ef197ae1-9fe2-4462-8cf1-06214e5d2355', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ action: 'login', ...formData })
       });
 
       if (!response.ok) throw new Error('Ошибка входа');
@@ -35,9 +35,9 @@ export default function Login() {
         description: 'Вы успешно вошли в систему',
       });
 
-      if (data.role === 'guide') {
+      if (data.user.role === 'guide') {
         navigate('/guide');
-      } else if (data.role === 'admin') {
+      } else if (data.user.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/dashboard');

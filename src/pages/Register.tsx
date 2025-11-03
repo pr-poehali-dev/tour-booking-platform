@@ -26,10 +26,10 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://your-backend-url/auth/register', {
+      const response = await fetch('https://functions.poehali.dev/ef197ae1-9fe2-4462-8cf1-06214e5d2355', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role })
+        body: JSON.stringify({ action: 'register', ...formData, role })
       });
 
       if (!response.ok) throw new Error('Ошибка регистрации');

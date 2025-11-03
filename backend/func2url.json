@@ -1,6 +1,5 @@
 {
-  "tour-moderation": "https://functions.poehali.dev/4205f6df-712e-4186-9500-1a40b5b4ccbc",
-  "tour-availability": "https://functions.poehali.dev/ea1d4186-da9c-4a58-89f2-294ff85dc805",
+  "auth": "https://functions.poehali.dev/ef197ae1-9fe2-4462-8cf1-06214e5d2355",
   "tours": "https://functions.poehali.dev/4c1ca0b4-cf0f-45df-b42e-d029cfb0b520",
   "bookings": "https://functions.poehali.dev/2b4d691b-a242-40f0-ab27-cee036ce7a7c",
   "chat": "https://functions.poehali.dev/35949772-9ec1-4eb2-9d6e-8bdfba2d3323"
