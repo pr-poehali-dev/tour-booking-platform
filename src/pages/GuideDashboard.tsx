@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +19,17 @@ import NotificationBell from '@/components/NotificationBell';
 import { bookingApi } from '@/lib/bookingApi';
 
 export default function GuideDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('tours');
   const [isCreatingTour, setIsCreatingTour] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    navigate('/');
+  };
 
   const guide = {
     name: 'Анна Новикова',
@@ -199,7 +206,7 @@ export default function GuideDashboard() {
                       Настройки
                     </Link>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
+                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700" onClick={handleLogout}>
                     <Icon name="LogOut" size={18} className="mr-2" />
                     Выйти
                   </Button>

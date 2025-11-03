@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +11,15 @@ import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
 
 export default function ClientDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    navigate('/');
+  };
 
   const user = {
     name: 'Иван Петров',
@@ -195,7 +202,7 @@ export default function ClientDashboard() {
                       Настройки
                     </Link>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
+                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700" onClick={handleLogout}>
                     <Icon name="LogOut" size={18} className="mr-2" />
                     Выйти
                   </Button>
