@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Get all tours",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tours": "array",
+        "total": "number",
+        "cities": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get tours by city",
+      "method": "GET",
+      "path": "/?city=Москва",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tours": "array",
+        "total": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Search tours",
+      "method": "GET",
+      "path": "/?search=экскурсия",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tours": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

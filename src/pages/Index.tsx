@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,56 +8,60 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import Icon from '@/components/ui/icon';
+import { toursApi, Tour } from '@/lib/toursApi';
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [duration, setDuration] = useState('all');
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const tours = [
-    {
-      id: 1,
-      title: 'Исторический центр Праги',
-      city: 'Прага',
-      country: 'Чехия',
-      duration: '1 день',
-      price: 3500,
-      rating: 4.9,
-      reviews: 127,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg',
-      guide: 'Анна Новикова',
-      description: 'Прогулка по старинным улочкам с профессиональным гидом'
-    },
-    {
-      id: 2,
-      title: 'Горный поход в Альпах',
-      city: 'Инсбрук',
-      country: 'Австрия',
-      duration: '3 дня',
-      price: 15000,
-      rating: 4.8,
-      reviews: 89,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/cd6e6544-d11b-4b3d-b500-bd94c90cbc08.jpg',
-      guide: 'Михаил Петров',
-      description: 'Незабываемое приключение в горах с опытным инструктором'
-    },
-    {
-      id: 3,
-      title: 'Средиземноморское побережье',
-      city: 'Барселона',
-      country: 'Испания',
-      duration: '5 дней',
-      price: 25000,
-      rating: 5.0,
-      reviews: 203,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/d83244a1-dd1c-448a-8abc-9c02416fbff3.jpg',
-      guide: 'Елена Соколова',
-      description: 'Путешествие по живописным городам Каталонии'
+  useEffect(() => {
+    loadTours();
+  }, [selectedCity, priceRange, searchQuery]);
+
+  const loadTours = async () => {
+    setIsLoading(true);
+    try {
+      const filters: any = {};
+      
+      if (selectedCity !== 'all') {
+        filters.city = selectedCity;
+      }
+      
+      if (priceRange[0] > 0) {
+        filters.min_price = priceRange[0];
+      }
+      
+      if (priceRange[1] < 50000) {
+        filters.max_price = priceRange[1];
+      }
+      
+      if (searchQuery.trim()) {
+        filters.search = searchQuery.trim();
+      }
+      
+      const data = await toursApi.getTours(filters);
+      setTours(data.tours);
+      setCities(data.cities);
+    } catch (error) {
+      console.error('Failed to load tours:', error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
-  const cities = ['Все города', 'Прага', 'Инсбрук', 'Барселона', 'Рим', 'Париж', 'Берлин'];
+  const formatDuration = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) return `${mins} минут`;
+    if (mins === 0) return `${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'}`;
+    return `${hours}ч ${mins}м`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,9 +156,9 @@ export default function Index() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Все города</SelectItem>
-                      <SelectItem value="prague">Прага</SelectItem>
-                      <SelectItem value="innsbruck">Инсбрук</SelectItem>
-                      <SelectItem value="barcelona">Барселона</SelectItem>
+                      {cities.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -202,44 +206,54 @@ export default function Index() {
             </Card>
 
             <div className="lg:col-span-3 grid md:grid-cols-2 gap-6">
-              {tours.map((tour) => (
-                <Link key={tour.id} to={`/tour/${tour.id}`}>
-                <Card className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer">
-                  <div className="relative h-64 overflow-hidden">
-                    <img 
-                      src={tour.image} 
-                      alt={tour.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-4 right-4 bg-white text-foreground">
-                      {tour.duration}
-                    </Badge>
-                  </div>
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline">{tour.city}, {tour.country}</Badge>
-                      <div className="flex items-center gap-1">
-                        <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
-                        <span className="font-semibold">{tour.rating}</span>
-                        <span className="text-sm text-muted-foreground">({tour.reviews})</span>
+              {isLoading ? (
+                <div className="col-span-2 text-center py-12">
+                  <p className="text-muted-foreground">Загрузка туров...</p>
+                </div>
+              ) : tours.length === 0 ? (
+                <div className="col-span-2 text-center py-12">
+                  <p className="text-muted-foreground">Туров не найдено. Попробуйте изменить фильтры.</p>
+                </div>
+              ) : (
+                tours.map((tour) => (
+                  <Link key={tour.id} to={`/tour/${tour.id}`}>
+                    <Card className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer">
+                      <div className="relative h-64 overflow-hidden">
+                        <img 
+                          src={tour.image_url} 
+                          alt={tour.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <Badge className="absolute top-4 right-4 bg-white text-foreground">
+                          {formatDuration(tour.duration)}
+                        </Badge>
                       </div>
-                    </div>
-                    <CardTitle className="font-heading line-clamp-2">{tour.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{tour.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        <Icon name="User" size={14} />
-                        <span>{tour.guide}</span>
-                      </div>
-                      <div className="text-2xl font-bold text-primary">{tour.price.toLocaleString()} ₽</div>
-                    </div>
-                    <Button>Подробнее</Button>
-                  </CardFooter>
-                </Card>
-                </Link>
-              ))}
+                      <CardHeader>
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline">{tour.city}</Badge>
+                          <div className="flex items-center gap-1">
+                            <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500" />
+                            <span className="font-semibold">{tour.rating.toFixed(1)}</span>
+                            <span className="text-sm text-muted-foreground">({tour.reviews_count})</span>
+                          </div>
+                        </div>
+                        <CardTitle className="font-heading line-clamp-2">{tour.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">{tour.short_description}</CardDescription>
+                      </CardHeader>
+                      <CardFooter className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                            <Icon name="User" size={14} />
+                            <span>{tour.guide_name}</span>
+                          </div>
+                          <div className="text-2xl font-bold text-primary">{tour.price.toLocaleString()} ₽</div>
+                        </div>
+                        <Button>Подробнее</Button>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>
