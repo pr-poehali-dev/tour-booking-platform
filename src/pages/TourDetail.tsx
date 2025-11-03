@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
 import { bookingApi } from '@/lib/bookingApi';
 import { chatApi } from '@/lib/chatApi';
+import { availabilityApi, TourAvailability } from '@/lib/availabilityApi';
 
 export default function TourDetail() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -32,6 +33,7 @@ export default function TourDetail() {
   const [clientName, setClientName] = useState('');
   const [clientTelegram, setClientTelegram] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  const [availability, setAvailability] = useState<TourAvailability | null>(null);
 
   const tour = {
     id: 1,
@@ -88,8 +90,27 @@ export default function TourDetail() {
     setChatMessage('');
   };
 
+  useEffect(() => {
+    loadAvailability();
+  }, []);
+
+  const loadAvailability = async () => {
+    try {
+      const data = await availabilityApi.getAvailability(tour.id);
+      setAvailability(data);
+    } catch (error) {
+      console.error('Failed to load availability:', error);
+    }
+  };
+
   const isDateAvailable = (date: Date) => {
     return tour.availableDates.includes(date.getDate());
+  };
+
+  const getAvailableSlots = (date: Date): number => {
+    if (!availability) return 0;
+    const dateStr = date.toISOString().split('T')[0];
+    return availability.availability[dateStr] ?? availability.max_guests;
   };
 
   const handleBooking = async () => {
@@ -326,22 +347,40 @@ export default function TourDetail() {
               <CardContent className="space-y-6">
                 <div>
                   <label className="text-sm font-medium mb-3 block">Выберите дату</label>
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="rounded-md border"
-                    disabled={(date) => !isDateAvailable(date)}
-                    modifiers={{
-                      available: (date) => isDateAvailable(date)
-                    }}
-                    modifiersStyles={{
-                      available: { fontWeight: 'bold', color: 'hsl(var(--primary))' }
-                    }}
-                  />
+                  <div className="relative">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      className="rounded-md border"
+                      disabled={(date) => !isDateAvailable(date)}
+                      modifiers={{
+                        available: (date) => isDateAvailable(date)
+                      }}
+                      modifiersStyles={{
+                        available: { fontWeight: 'bold', color: 'hsl(var(--primary))' }
+                      }}
+                      components={{
+                        DayContent: ({ date: dayDate }) => {
+                          const slots = getAvailableSlots(dayDate);
+                          const isAvailable = isDateAvailable(dayDate);
+                          return (
+                            <div className="relative w-full h-full flex flex-col items-center justify-center">
+                              <span>{dayDate.getDate()}</span>
+                              {isAvailable && slots !== undefined && (
+                                <span className="text-[9px] text-muted-foreground absolute bottom-0">
+                                  {slots > 0 ? `${slots} мест` : 'нет мест'}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+                      }}
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     <Icon name="Info" size={12} className="inline mr-1" />
-                    Выделены доступные даты
+                    Показано количество свободных мест
                   </p>
                 </div>
 
