@@ -193,20 +193,17 @@ def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     cursor.execute("""
         INSERT INTO t_p71176016_tour_booking_platfor.tours (
-            title, city, country, price, duration, 
+            title, city, price, duration, 
             short_description, full_description, 
-            image_url, guide_id, status, instant_booking,
-            rating, reviews_count, max_guests
+            image_url, guide_id, status, instant_booking, max_guests
         ) VALUES (
-            %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, 
             %s, %s, 
-            %s, 1, 'pending', %s,
-            0, 0, 10
+            %s, 1, 'pending', %s, 10
         ) RETURNING id
     """, (
         body_data['title'],
         body_data['city'],
-        body_data.get('country', ''),
         float(body_data['price']),
         int(body_data['duration']),
         body_data['short_description'],
