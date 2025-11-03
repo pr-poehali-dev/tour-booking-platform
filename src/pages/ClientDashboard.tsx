@@ -15,6 +15,15 @@ export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState('bookings');
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
+  const [user, setUser] = useState({
+    name: 'Иван Петров',
+    email: 'ivan.petrov@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan',
+    memberSince: 'Октябрь 2023',
+    totalBookings: 12,
+    totalSpent: 145000
+  });
+
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (!userStr) {
@@ -22,25 +31,26 @@ export default function ClientDashboard() {
       return;
     }
     
-    const user = JSON.parse(userStr);
-    if (user.role !== 'client') {
+    const userData = JSON.parse(userStr);
+    if (userData.role !== 'client') {
       navigate('/');
+      return;
     }
+
+    setUser({
+      name: userData.name || 'Пользователь',
+      email: userData.email || '',
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name || 'User'}`,
+      memberSince: 'Октябрь 2023',
+      totalBookings: 12,
+      totalSpent: 145000
+    });
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/');
-  };
-
-  const user = {
-    name: 'Иван Петров',
-    email: 'ivan.petrov@example.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan',
-    memberSince: 'Октябрь 2023',
-    totalBookings: 12,
-    totalSpent: 145000
   };
 
   const bookings = [
@@ -166,7 +176,7 @@ export default function ClientDashboard() {
               <NotificationBell userId={3} />
               <Avatar>
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback>ИП</AvatarFallback>
+                <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -180,7 +190,7 @@ export default function ClientDashboard() {
               <CardHeader className="text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
                   <AvatarImage src={user.avatar} />
-                  <AvatarFallback>ИП</AvatarFallback>
+                  <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="font-heading">{user.name}</CardTitle>
                 <CardDescription>{user.email}</CardDescription>

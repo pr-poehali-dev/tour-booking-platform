@@ -25,26 +25,7 @@ export default function GuideDashboard() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      navigate('/login');
-      return;
-    }
-    
-    const user = JSON.parse(userStr);
-    if (user.role !== 'guide') {
-      navigate('/');
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    navigate('/');
-  };
-
-  const guide = {
+  const [guide, setGuide] = useState({
     name: 'Анна Новикова',
     email: 'anna.novikova@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anna',
@@ -53,6 +34,37 @@ export default function GuideDashboard() {
     totalReviews: 342,
     totalEarnings: 458000,
     memberSince: 'Январь 2022'
+  });
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      navigate('/login');
+      return;
+    }
+    
+    const userData = JSON.parse(userStr);
+    if (userData.role !== 'guide') {
+      navigate('/');
+      return;
+    }
+
+    setGuide({
+      name: userData.name || 'Гид',
+      email: userData.email || '',
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name || 'Guide'}`,
+      rating: 4.9,
+      totalTours: 23,
+      totalReviews: 342,
+      totalEarnings: 458000,
+      memberSince: 'Январь 2022'
+    });
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    navigate('/');
   };
 
   const tours = [
@@ -165,7 +177,7 @@ export default function GuideDashboard() {
               <NotificationBell userId={1} />
               <Avatar>
                 <AvatarImage src={guide.avatar} />
-                <AvatarFallback>АН</AvatarFallback>
+                <AvatarFallback>{guide.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -179,7 +191,7 @@ export default function GuideDashboard() {
               <CardHeader className="text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
                   <AvatarImage src={guide.avatar} />
-                  <AvatarFallback>АН</AvatarFallback>
+                  <AvatarFallback>{guide.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="font-heading">{guide.name}</CardTitle>
                 <CardDescription>{guide.email}</CardDescription>

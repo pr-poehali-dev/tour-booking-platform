@@ -20,6 +20,10 @@ export default function AdminDashboard() {
   const [rejectReason, setRejectReason] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [admin, setAdmin] = useState({
+    name: 'Администратор',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'
+  });
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -28,11 +32,16 @@ export default function AdminDashboard() {
       return;
     }
     
-    const user = JSON.parse(userStr);
-    if (user.role !== 'admin') {
+    const userData = JSON.parse(userStr);
+    if (userData.role !== 'admin') {
       navigate('/');
       return;
     }
+
+    setAdmin({
+      name: userData.name || 'Администратор',
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name || 'Admin'}`
+    });
 
     loadTours();
   }, [navigate]);
@@ -107,10 +116,13 @@ export default function AdminDashboard() {
             </Link>
             <div className="flex items-center gap-3">
               <Badge variant="destructive">Администратор</Badge>
-              <Avatar>
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" />
-                <AvatarFallback>А</AvatarFallback>
-              </Avatar>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{admin.name}</span>
+                <Avatar>
+                  <AvatarImage src={admin.avatar} />
+                  <AvatarFallback>{admin.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </div>
             </div>
           </div>
         </div>
