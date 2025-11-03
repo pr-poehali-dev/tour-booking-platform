@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,20 @@ export default function Register() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.role === 'guide') {
+        navigate('/guide');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -33,6 +47,9 @@ export default function Register() {
       });
 
       if (!response.ok) throw new Error('Ошибка регистрации');
+
+      const data = await response.json();
+      localStorage.setItem('user', JSON.stringify(data.user));
 
       toast({
         title: 'Успешная регистрация!',

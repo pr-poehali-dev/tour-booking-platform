@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { toursApi, Tour } from '@/lib/toursApi';
 import { moderationApi } from '@/lib/moderationApi';
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('moderation');
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,8 +22,20 @@ export default function AdminDashboard() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      navigate('/login');
+      return;
+    }
+    
+    const user = JSON.parse(userStr);
+    if (user.role !== 'admin') {
+      navigate('/');
+      return;
+    }
+
     loadTours();
-  }, []);
+  }, [navigate]);
 
   const loadTours = async () => {
     setIsLoading(true);

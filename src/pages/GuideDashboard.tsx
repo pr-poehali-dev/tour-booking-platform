@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,19 @@ export default function GuideDashboard() {
   const [isCreatingTour, setIsCreatingTour] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      navigate('/login');
+      return;
+    }
+    
+    const user = JSON.parse(userStr);
+    if (user.role !== 'guide') {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
