@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import TourDetail from "./pages/TourDetail";
 import ClientDashboard from "./pages/ClientDashboard";
 import GuideDashboard from "./pages/GuideDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/tour/:id" element={<TourDetail />} />
           <Route path="/dashboard" element={<ClientDashboard />} />
           <Route path="/guide" element={<GuideDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

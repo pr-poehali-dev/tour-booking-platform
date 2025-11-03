@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "Approve tour",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "tour_id": 1,
+        "action": "approve"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "tour_id": 1,
+        "action": "approve"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing required fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "approve"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "tour_id and action are required"
+      }
+    }
+  ]
+}

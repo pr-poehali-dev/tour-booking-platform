@@ -1,0 +1,2 @@
+INSERT INTO t_p71176016_tour_booking_platfor.users (name, email, role, avatar_url, telegram, created_at)
+VALUES ('Администратор', 'admin@turgid.com', 'admin', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin', '@admin', CURRENT_TIMESTAMP);
