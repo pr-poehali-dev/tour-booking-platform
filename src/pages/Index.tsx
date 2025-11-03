@@ -399,19 +399,19 @@ export default function Index() {
                 title: '10 секретных мест Европы',
                 excerpt: 'Откройте для себя уединённые уголки, о которых не знают толпы туристов',
                 date: '15 октября 2024',
-                image: tours[0].image
+                image: tours[0]?.image_url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800'
               },
               {
                 title: 'Как выбрать идеального гида',
                 excerpt: 'Советы по выбору профессионального гида для вашего путешествия',
                 date: '10 октября 2024',
-                image: tours[1].image
+                image: tours[1]?.image_url || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'
               },
               {
                 title: 'Подготовка к горному походу',
                 excerpt: 'Всё что нужно знать перед отправлением в многодневный горный тур',
                 date: '5 октября 2024',
-                image: tours[2].image
+                image: tours[2]?.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800'
               }
             ].map((post, index) => (
               <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
