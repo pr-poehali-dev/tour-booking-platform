@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -200,7 +201,8 @@ export default function Index() {
 
             <div className="lg:col-span-3 grid md:grid-cols-2 gap-6">
               {tours.map((tour) => (
-                <Card key={tour.id} className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer">
+                <Link key={tour.id} to={`/tour/${tour.id}`}>
+                <Card className="overflow-hidden hover:shadow-xl transition-shadow group cursor-pointer">
                   <div className="relative h-64 overflow-hidden">
                     <img 
                       src={tour.image} 
@@ -234,6 +236,7 @@ export default function Index() {
                     <Button>Подробнее</Button>
                   </CardFooter>
                 </Card>
+                </Link>
               ))}
             </div>
           </div>
