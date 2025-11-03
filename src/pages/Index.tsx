@@ -92,7 +92,7 @@ export default function Index() {
       <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${tours[0].image})` }}
+          style={{ backgroundImage: `url(${tours[0]?.image_url || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920'})` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
