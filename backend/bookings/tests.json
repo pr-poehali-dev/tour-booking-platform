@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "Get available tour dates",
+      "method": "GET",
+      "path": "/?action=tour_dates&tour_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "dates": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get user bookings",
+      "method": "GET",
+      "path": "/?action=user_bookings",
+      "headers": {
+        "X-User-Id": "3"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "bookings": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new booking",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "tour_id": 1,
+        "client_id": 3,
+        "booking_date": "2025-12-15",
+        "guests_count": 2,
+        "client_name": "Тестовый клиент",
+        "client_telegram": "@test_user"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "status": "string",
+        "total_price": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

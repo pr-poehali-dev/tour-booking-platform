@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import Icon from '@/components/ui/icon';
 import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
+import { bookingApi } from '@/lib/bookingApi';
 
 export default function GuideDashboard() {
   const [activeTab, setActiveTab] = useState('tours');
@@ -513,11 +514,33 @@ export default function GuideDashboard() {
                         </Button>
                         {booking.status === 'pending' && (
                           <>
-                            <Button size="sm" className="ml-auto">
+                            <Button 
+                              size="sm" 
+                              className="ml-auto"
+                              onClick={async () => {
+                                try {
+                                  await bookingApi.confirmBooking(booking.id);
+                                  window.location.reload();
+                                } catch (error) {
+                                  console.error('Failed to confirm booking:', error);
+                                }
+                              }}
+                            >
                               <Icon name="Check" size={16} className="mr-2" />
                               Подтвердить
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await bookingApi.cancelBooking(booking.id);
+                                  window.location.reload();
+                                } catch (error) {
+                                  console.error('Failed to cancel booking:', error);
+                                }
+                              }}
+                            >
                               <Icon name="X" size={16} className="mr-2" />
                               Отклонить
                             </Button>

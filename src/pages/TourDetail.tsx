@@ -7,9 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
+import { bookingApi } from '@/lib/bookingApi';
+import { chatApi } from '@/lib/chatApi';
 
 export default function TourDetail() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -23,6 +27,11 @@ export default function TourDetail() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anna'
     }
   ]);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [guestsCount, setGuestsCount] = useState(1);
+  const [clientName, setClientName] = useState('');
+  const [clientTelegram, setClientTelegram] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
 
   const tour = {
     id: 1,
@@ -81,6 +90,39 @@ export default function TourDetail() {
 
   const isDateAvailable = (date: Date) => {
     return tour.availableDates.includes(date.getDate());
+  };
+
+  const handleBooking = async () => {
+    if (!date || !clientName.trim()) {
+      alert('Пожалуйста, выберите дату и укажите ваше имя');
+      return;
+    }
+
+    setIsBooking(true);
+    try {
+      const bookingDate = date.toISOString().split('T')[0];
+      
+      await bookingApi.createBooking({
+        tour_id: tour.id,
+        client_id: 3,
+        booking_date: bookingDate,
+        guests_count: guestsCount,
+        client_name: clientName,
+        client_telegram: clientTelegram
+      });
+
+      setIsBookingOpen(false);
+      alert('Бронирование успешно создано! Проверьте личный кабинет.');
+      
+      setClientName('');
+      setClientTelegram('');
+      setGuestsCount(1);
+    } catch (error) {
+      console.error('Booking error:', error);
+      alert('Ошибка при создании бронирования. Попробуйте снова.');
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   return (
@@ -356,13 +398,107 @@ export default function TourDetail() {
 
                 <Separator />
 
-                <Button className="w-full h-12 text-base" size="lg">
-                  <Icon name="Calendar" size={20} className="mr-2" />
-                  Забронировать тур
-                </Button>
+                <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full h-12 text-base" size="lg">
+                      <Icon name="Calendar" size={20} className="mr-2" />
+                      Забронировать тур
+                    </Button>
+                  </DialogTrigger>
+                  
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Забронировать тур</DialogTitle>
+                      <DialogDescription>
+                        {tour.title} • {date?.toLocaleDateString('ru-RU')}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label htmlFor="name">Ваше имя *</Label>
+                        <Input
+                          id="name"
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          placeholder="Иван Петров"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="telegram">Telegram (необязательно)</Label>
+                        <Input
+                          id="telegram"
+                          value={clientTelegram}
+                          onChange={(e) => setClientTelegram(e.target.value)}
+                          placeholder="@username"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="guests">Количество человек</Label>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setGuestsCount(Math.max(1, guestsCount - 1))}
+                          >
+                            <Icon name="Minus" size={16} />
+                          </Button>
+                          <Input
+                            id="guests"
+                            type="number"
+                            min={1}
+                            value={guestsCount}
+                            onChange={(e) => setGuestsCount(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="text-center w-20"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setGuestsCount(guestsCount + 1)}
+                          >
+                            <Icon name="Plus" size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm">Цена за человека:</span>
+                          <span className="font-semibold">{tour.price.toLocaleString()} ₽</span>
+                        </div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm">Количество человек:</span>
+                          <span className="font-semibold">{guestsCount}</span>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold">Итого:</span>
+                          <span className="text-2xl font-bold text-primary">
+                            {(tour.price * guestsCount).toLocaleString()} ₽
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsBookingOpen(false)}
+                        disabled={isBooking}
+                      >
+                        Отмена
+                      </Button>
+                      <Button onClick={handleBooking} disabled={isBooking}>
+                        {isBooking ? 'Бронирование...' : 'Подтвердить бронирование'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  При бронировании оплачивается 30% стоимости
+                  Бронирование бесплатное. Оплата на месте.
                 </p>
               </CardContent>
             </Card>
