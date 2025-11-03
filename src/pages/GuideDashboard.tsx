@@ -18,6 +18,7 @@ import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
 import { bookingApi } from '@/lib/bookingApi';
 import { toursApi, CreateTourData } from '@/lib/toursApi';
+import { uploadApi } from '@/lib/uploadApi';
 import { useToast } from '@/hooks/use-toast';
 
 export default function GuideDashboard() {
@@ -28,6 +29,8 @@ export default function GuideDashboard() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [newTourData, setNewTourData] = useState({
     title: '',
     city: '',
@@ -83,11 +86,61 @@ export default function GuideDashboard() {
     navigate('/');
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Неверный формат файла",
+        description: "Пожалуйста, выберите изображение",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Файл слишком большой",
+        description: "Максимальный размер изображения - 5 МБ",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const result = await uploadApi.uploadImage(file);
+      setUploadedImageUrl(result.url);
+      toast({
+        title: "Изображение загружено!",
+        description: "Фото добавлено к туру"
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка загрузки",
+        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleCreateTour = async () => {
     if (!newTourData.title || !newTourData.city || !newTourData.price || !newTourData.duration || !newTourData.shortDescription || !newTourData.fullDescription) {
       toast({
         title: "Заполните все обязательные поля",
         description: "Пожалуйста, заполните все поля, отмеченные звездочкой",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!uploadedImageUrl) {
+      toast({
+        title: "Загрузите фотографию",
+        description: "Необходимо добавить главное фото тура",
         variant: "destructive"
       });
       return;
@@ -115,7 +168,7 @@ export default function GuideDashboard() {
         languages: newTourData.languages || 'Русский',
         available_dates: selectedDates.map(d => d.toISOString()),
         instant_booking: newTourData.instantBooking,
-        image_url: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg'
+        image_url: uploadedImageUrl || 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg'
       };
 
       await toursApi.createTour(tourData);
@@ -139,6 +192,7 @@ export default function GuideDashboard() {
         instantBooking: false
       });
       setSelectedDates([]);
+      setUploadedImageUrl('');
       
       window.location.reload();
     } catch (error) {
@@ -467,11 +521,36 @@ export default function GuideDashboard() {
                       </div>
 
                       <div>
-                        <Label htmlFor="images">Фотографии</Label>
+                        <Label htmlFor="images">Главное фото тура *</Label>
                         <p className="text-sm text-muted-foreground mb-2">
-                          Добавьте минимум 3 качественных фотографии
+                          Загрузите качественную фотографию (до 5 МБ)
                         </p>
-                        <Input id="images" type="file" multiple accept="image/*" />
+                        <Input 
+                          id="images" 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={isUploadingImage}
+                        />
+                        {isUploadingImage && (
+                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                            <Icon name="Loader2" size={16} className="animate-spin" />
+                            <span>Загрузка изображения...</span>
+                          </div>
+                        )}
+                        {uploadedImageUrl && (
+                          <div className="mt-3">
+                            <img 
+                              src={uploadedImageUrl} 
+                              alt="Preview" 
+                              className="w-full h-48 object-cover rounded-lg"
+                            />
+                            <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                              <Icon name="CheckCircle2" size={14} />
+                              Изображение загружено
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <Separator />
@@ -496,10 +575,17 @@ export default function GuideDashboard() {
                   </div>
 
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCreatingTour(false)} disabled={isSubmitting}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsCreatingTour(false);
+                        setUploadedImageUrl('');
+                      }} 
+                      disabled={isSubmitting}
+                    >
                       Отмена
                     </Button>
-                    <Button onClick={handleCreateTour} disabled={isSubmitting}>
+                    <Button onClick={handleCreateTour} disabled={isSubmitting || isUploadingImage}>
                       {isSubmitting ? (
                         <>
                           <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
