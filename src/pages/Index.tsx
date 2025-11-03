@@ -300,9 +300,11 @@ export default function Index() {
                   <span>Общайтесь с клиентами через встроенный чат</span>
                 </li>
               </ul>
-              <Button size="lg" className="text-lg">
-                Зарегистрироваться как гид
-                <Icon name="ArrowRight" size={20} className="ml-2" />
+              <Button size="lg" className="text-lg" asChild>
+                <Link to="/guide">
+                  Зарегистрироваться как гид
+                  <Icon name="ArrowRight" size={20} className="ml-2" />
+                </Link>
               </Button>
             </div>
             <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl">
