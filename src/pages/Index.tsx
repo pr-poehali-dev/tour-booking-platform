@@ -323,7 +323,7 @@ export default function Index() {
             </div>
             <div className="relative h-96 rounded-2xl overflow-hidden shadow-2xl">
               <img 
-                src={tours[2].image}
+                src={tours[0]?.image_url || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800"}
                 alt="Гид"
                 className="w-full h-full object-cover"
               />
