@@ -14,11 +14,14 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
+import ChatWidget from '@/components/ChatWidget';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function GuideDashboard() {
   const [activeTab, setActiveTab] = useState('tours');
   const [isCreatingTour, setIsCreatingTour] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
   const guide = {
     name: 'Анна Новикова',
@@ -138,6 +141,7 @@ export default function GuideDashboard() {
               <Button variant="ghost" asChild>
                 <Link to="/">Каталог туров</Link>
               </Button>
+              <NotificationBell userId={1} />
               <Avatar>
                 <AvatarImage src={guide.avatar} />
                 <AvatarFallback>АН</AvatarFallback>
@@ -495,9 +499,13 @@ export default function GuideDashboard() {
                         </div>
                       </CardHeader>
                       <CardFooter className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedBookingId(selectedBookingId === booking.id ? null : booking.id)}
+                        >
                           <Icon name="MessageCircle" size={16} className="mr-2" />
-                          Чат на сайте
+                          {selectedBookingId === booking.id ? 'Закрыть чат' : 'Чат на сайте'}
                         </Button>
                         <Button variant="outline" size="sm">
                           <Icon name="Send" size={16} className="mr-2" />
@@ -516,6 +524,16 @@ export default function GuideDashboard() {
                           </>
                         )}
                       </CardFooter>
+                      {selectedBookingId === booking.id && (
+                        <div className="border-t p-4">
+                          <ChatWidget
+                            bookingId={booking.id}
+                            currentUserId={1}
+                            currentUserName={guide.name}
+                            otherUserName={booking.clientName}
+                          />
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>

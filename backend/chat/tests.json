@@ -1,0 +1,56 @@
+{
+  "tests": [
+    {
+      "name": "Get chat messages for booking",
+      "method": "GET",
+      "path": "/?action=messages&booking_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "messages": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get notifications for user",
+      "method": "GET",
+      "path": "/?action=notifications",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "notifications": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get unread notifications count",
+      "method": "GET",
+      "path": "/?action=unread_count",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "unread_count": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Send chat message",
+      "method": "POST",
+      "path": "/?action=send_message",
+      "body": {
+        "booking_id": 1,
+        "sender_id": 1,
+        "message": "Привет! Это тестовое сообщение"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "created_at": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

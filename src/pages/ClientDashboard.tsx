@@ -7,9 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
+import ChatWidget from '@/components/ChatWidget';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState('bookings');
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
   const user = {
     name: 'Иван Петров',
@@ -140,6 +143,7 @@ export default function ClientDashboard() {
               <Button variant="ghost" asChild>
                 <Link to="/">Каталог туров</Link>
               </Button>
+              <NotificationBell userId={3} />
               <Avatar>
                 <AvatarImage src={user.avatar} />
                 <AvatarFallback>ИП</AvatarFallback>
@@ -270,9 +274,13 @@ export default function ClientDashboard() {
                                     {(booking.price * booking.participants).toLocaleString()} ₽
                                   </div>
                                   <div className="flex gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setSelectedBookingId(selectedBookingId === booking.id ? null : booking.id)}
+                                    >
                                       <Icon name="MessageCircle" size={16} className="mr-2" />
-                                      Написать гиду
+                                      {selectedBookingId === booking.id ? 'Закрыть чат' : 'Написать гиду'}
                                     </Button>
                                     <Button size="sm" asChild>
                                       <Link to={`/tour/${booking.id}`}>Подробнее</Link>
@@ -280,6 +288,16 @@ export default function ClientDashboard() {
                                   </div>
                                 </div>
                               </CardContent>
+                              {selectedBookingId === booking.id && (
+                                <div className="border-t p-4">
+                                  <ChatWidget
+                                    bookingId={booking.id}
+                                    currentUserId={3}
+                                    currentUserName={user.name}
+                                    otherUserName={booking.guide}
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                         </Card>
