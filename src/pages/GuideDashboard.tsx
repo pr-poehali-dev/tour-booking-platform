@@ -108,6 +108,13 @@ export default function GuideDashboard() {
       return;
     }
 
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const previewUrl = reader.result as string;
+      setUploadedImageUrl(previewUrl);
+    };
+    reader.readAsDataURL(file);
+
     setIsUploadingImage(true);
     try {
       const result = await uploadApi.uploadImage(file);

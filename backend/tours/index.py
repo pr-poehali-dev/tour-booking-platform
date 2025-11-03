@@ -53,7 +53,7 @@ def handle_catalog(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     count_query = f'''
         SELECT COUNT(*) as total
-        FROM tours t
+        FROM t_p71176016_tour_booking_platfor.tours t
         WHERE {where_sql}
     '''
     cursor.execute(count_query, query_params)
@@ -64,8 +64,8 @@ def handle_catalog(event: Dict[str, Any], conn) -> Dict[str, Any]:
             t.*,
             u.name as guide_name,
             u.avatar_url as guide_avatar
-        FROM tours t
-        JOIN users u ON t.guide_id = u.id
+        FROM t_p71176016_tour_booking_platfor.tours t
+        JOIN t_p71176016_tour_booking_platfor.users u ON t.guide_id = u.id
         WHERE {where_sql}
         ORDER BY t.created_at DESC
         LIMIT %s OFFSET %s
@@ -76,7 +76,7 @@ def handle_catalog(event: Dict[str, Any], conn) -> Dict[str, Any]:
     tours = cursor.fetchall()
     
     cursor.execute('''
-        SELECT DISTINCT city FROM tours WHERE status = 'active' ORDER BY city
+        SELECT DISTINCT city FROM t_p71176016_tour_booking_platfor.tours WHERE status = 'active' ORDER BY city
     ''')
     cities = [row['city'] for row in cursor.fetchall()]
     
@@ -192,7 +192,7 @@ def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO tours (
+        INSERT INTO t_p71176016_tour_booking_platfor.tours (
             title, city, country, price, duration, 
             short_description, full_description, 
             image_url, guide_id, status, instant_booking,
@@ -261,7 +261,7 @@ def handle_moderation(event: Dict[str, Any], conn) -> Dict[str, Any]:
         instant_booking = False
     
     cursor.execute(
-        """UPDATE tours
+        """UPDATE t_p71176016_tour_booking_platfor.tours
         SET status = %s,
             instant_booking = %s,
             updated_at = CURRENT_TIMESTAMP
