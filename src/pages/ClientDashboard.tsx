@@ -393,7 +393,7 @@ export default function ClientDashboard() {
                     <Card key={tour.id} className="overflow-hidden hover:shadow-xl transition-shadow group">
                       <div className="relative h-56 overflow-hidden">
                         <img 
-                          src={tour.image}
+                          src={tour.image_url || tour.image}
                           alt={tour.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />

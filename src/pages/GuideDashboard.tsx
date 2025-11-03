@@ -385,7 +385,7 @@ export default function GuideDashboard() {
                       <div className="md:flex">
                         <div className="md:w-1/3 h-48 md:h-auto relative">
                           <img 
-                            src={tour.image}
+                            src={tour.image_url || tour.image}
                             alt={tour.title}
                             className="w-full h-full object-cover"
                           />
