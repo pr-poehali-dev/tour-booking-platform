@@ -140,9 +140,6 @@ export default function ClientDashboard() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const upcomingBookings = bookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed');
-  const completedBookings = bookings.filter(b => b.status === 'completed');
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-50">
