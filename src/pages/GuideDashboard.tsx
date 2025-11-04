@@ -641,7 +641,7 @@ export default function GuideDashboard() {
                           accept="image/*"
                           multiple
                           onChange={handleImageUpload}
-                          disabled={uploadedImages.length >= 15}
+                          disabled={uploadedImages.length >= 15 || uploadingIndexes.size > 0}
                         />
                         {uploadedImages.length > 0 && (
                           <div className="mt-4 grid grid-cols-3 gap-3">
