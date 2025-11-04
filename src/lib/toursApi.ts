@@ -36,16 +36,12 @@ export interface ToursFilters {
 export interface CreateTourData {
   title: string;
   city: string;
-  country: string;
   price: number;
   duration: number;
   short_description: string;
   full_description: string;
-  group_size: string;
-  languages: string;
-  available_dates: string[];
   instant_booking: boolean;
-  image_url?: string;
+  image_url: string;
 }
 
 export const toursApi = {

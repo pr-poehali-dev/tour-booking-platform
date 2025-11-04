@@ -29,8 +29,8 @@ export default function GuideDashboard() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadingIndexes, setUploadingIndexes] = useState<Set<number>>(new Set());
   const [newTourData, setNewTourData] = useState({
     title: '',
     city: '',
@@ -87,50 +87,76 @@ export default function GuideDashboard() {
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
+    const currentCount = uploadedImages.length;
+    const newFilesArray = Array.from(files).slice(0, 15 - currentCount);
+
+    if (newFilesArray.length === 0) {
       toast({
-        title: "Неверный формат файла",
-        description: "Пожалуйста, выберите изображение",
+        title: "Достигнут лимит",
+        description: "Максимум 15 фотографий",
         variant: "destructive"
       });
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Файл слишком большой",
-        description: "Максимальный размер изображения - 5 МБ",
-        variant: "destructive"
-      });
-      return;
-    }
+    for (const file of newFilesArray) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Неверный формат файла",
+          description: `Файл ${file.name} не является изображением`,
+          variant: "destructive"
+        });
+        continue;
+      }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const previewUrl = reader.result as string;
-      setUploadedImageUrl(previewUrl);
-    };
-    reader.readAsDataURL(file);
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Файл слишком большой",
+          description: `${file.name} превышает 5 МБ`,
+          variant: "destructive"
+        });
+        continue;
+      }
 
-    setIsUploadingImage(true);
-    try {
-      const result = await uploadApi.uploadImage(file);
-      setUploadedImageUrl(result.url);
-      toast({
-        title: "Изображение загружено!",
-        description: "Фото добавлено к туру"
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка загрузки",
-        description: error instanceof Error ? error.message : "Попробуйте еще раз",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploadingImage(false);
+      const tempIndex = uploadedImages.length;
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const previewUrl = reader.result as string;
+        setUploadedImages(prev => [...prev, previewUrl]);
+      };
+      reader.readAsDataURL(file);
+
+      setUploadingIndexes(prev => new Set(prev).add(tempIndex));
+      
+      try {
+        const result = await uploadApi.uploadImage(file);
+        setUploadedImages(prev => {
+          const newArr = [...prev];
+          newArr[tempIndex] = result.url;
+          return newArr;
+        });
+        toast({
+          title: "Фото загружено!",
+          description: `${file.name} добавлено`
+        });
+      } catch (error) {
+        setUploadedImages(prev => prev.filter((_, i) => i !== tempIndex));
+        toast({
+          title: "Ошибка загрузки",
+          description: error instanceof Error ? error.message : "Попробуйте еще раз",
+          variant: "destructive"
+        });
+      } finally {
+        setUploadingIndexes(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempIndex);
+          return newSet;
+        });
+      }
     }
   };
 
@@ -144,10 +170,10 @@ export default function GuideDashboard() {
       return;
     }
 
-    if (!uploadedImageUrl) {
+    if (uploadedImages.length === 0) {
       toast({
-        title: "Загрузите фотографию",
-        description: "Необходимо добавить главное фото тура",
+        title: "Загрузите фотографии",
+        description: "Необходимо добавить хотя бы одно фото тура",
         variant: "destructive"
       });
       return;
@@ -166,16 +192,12 @@ export default function GuideDashboard() {
       const tourData: CreateTourData = {
         title: newTourData.title,
         city: newTourData.city,
-        country: newTourData.country || 'Россия',
         price: parseFloat(newTourData.price),
         duration: durationMap[newTourData.duration] || 480,
         short_description: newTourData.shortDescription,
         full_description: newTourData.fullDescription,
-        group_size: newTourData.groupSize || 'до 10 человек',
-        languages: newTourData.languages || 'Русский',
-        available_dates: selectedDates.map(d => d.toISOString()),
         instant_booking: newTourData.instantBooking,
-        image_url: uploadedImageUrl || 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg'
+        image_url: uploadedImages[0]
       };
 
       await toursApi.createTour(tourData);
@@ -199,7 +221,7 @@ export default function GuideDashboard() {
         instantBooking: false
       });
       setSelectedDates([]);
-      setUploadedImageUrl('');
+      setUploadedImages([]);
       
       window.location.reload();
     } catch (error) {
@@ -528,36 +550,58 @@ export default function GuideDashboard() {
                       </div>
 
                       <div>
-                        <Label htmlFor="images">Главное фото тура *</Label>
+                        <Label htmlFor="images">Фотографии тура * (до 15 фото)</Label>
                         <p className="text-sm text-muted-foreground mb-2">
-                          Загрузите качественную фотографию (до 5 МБ)
+                          Загрузите качественные фотографии (до 5 МБ каждая). Можно выбрать несколько.
                         </p>
                         <Input 
                           id="images" 
                           type="file" 
                           accept="image/*"
+                          multiple
                           onChange={handleImageUpload}
-                          disabled={isUploadingImage}
+                          disabled={uploadedImages.length >= 15}
                         />
-                        {isUploadingImage && (
-                          <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                            <Icon name="Loader2" size={16} className="animate-spin" />
-                            <span>Загрузка изображения...</span>
+                        {uploadedImages.length > 0 && (
+                          <div className="mt-4 grid grid-cols-3 gap-3">
+                            {uploadedImages.map((url, index) => (
+                              <div key={index} className="relative group">
+                                <img 
+                                  src={url} 
+                                  alt={`Фото ${index + 1}`} 
+                                  className="w-full h-32 object-cover rounded-lg border"
+                                />
+                                {uploadingIndexes.has(index) && (
+                                  <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
+                                    <Icon name="Loader2" size={24} className="animate-spin text-white" />
+                                  </div>
+                                )}
+                                {!uploadingIndexes.has(index) && (
+                                  <>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        className="h-7 w-7 p-0"
+                                        onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
+                                      >
+                                        <Icon name="X" size={14} />
+                                      </Button>
+                                    </div>
+                                    {index === 0 && (
+                                      <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                                        Главное фото
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         )}
-                        {uploadedImageUrl && (
-                          <div className="mt-3">
-                            <img 
-                              src={uploadedImageUrl} 
-                              alt="Preview" 
-                              className="w-full h-48 object-cover rounded-lg"
-                            />
-                            <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                              <Icon name="CheckCircle2" size={14} />
-                              Изображение загружено
-                            </p>
-                          </div>
-                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Загружено: {uploadedImages.length} / 15 фото
+                        </p>
                       </div>
 
                       <Separator />
