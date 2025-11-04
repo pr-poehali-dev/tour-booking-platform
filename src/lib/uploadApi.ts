@@ -8,41 +8,41 @@ export interface UploadResponse {
 
 export const uploadApi = {
   async uploadImage(file: File): Promise<UploadResponse> {
+    const fileReader = new FileReader();
+    
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onloadend = async () => {
+      fileReader.onloadend = async () => {
         try {
-          const base64data = reader.result as string;
+          const base64Content = fileReader.result as string;
           
-          const response = await fetch(UPLOAD_API_URL, {
+          const uploadResponse = await fetch(UPLOAD_API_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              image: base64data,
+              image: base64Content,
               filename: file.name
             }),
           });
           
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to upload image');
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.error || 'Failed to upload image');
           }
           
-          const result = await response.json();
-          resolve(result);
-        } catch (error) {
-          reject(error);
+          const uploadResult = await uploadResponse.json();
+          resolve(uploadResult);
+        } catch (uploadError) {
+          reject(uploadError);
         }
       };
       
-      reader.onerror = () => {
+      fileReader.onerror = () => {
         reject(new Error('Failed to read file'));
       };
       
-      reader.readAsDataURL(file);
+      fileReader.readAsDataURL(file);
     });
   }
 };
