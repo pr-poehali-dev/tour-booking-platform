@@ -207,34 +207,20 @@ export default function GuideDashboard() {
         continue;
       }
 
-      const targetIndex = tourImages.length + fileIdx;
+      const tempId = `temp_${Date.now()}_${fileIdx}`;
       
-      const fileReaderInstance = new FileReader();
-      fileReaderInstance.onloadend = () => {
-        const previewDataUrl = fileReaderInstance.result as string;
-        setTourImages(prevImgs => [...prevImgs, previewDataUrl]);
-      };
-      fileReaderInstance.readAsDataURL(currentFile);
-
-      setUploadingImages(prevSet => {
-        const newSet = new Set(prevSet);
-        newSet.add(targetIndex);
-        return newSet;
-      });
+      setTourImages(prevImgs => [...prevImgs, tempId]);
+      setUploadingImages(prevSet => new Set(prevSet).add(prevSet.size));
       
       try {
         const uploadedData = await uploadApi.uploadImage(currentFile);
-        setTourImages(prevImgs => {
-          const updatedImgs = [...prevImgs];
-          updatedImgs[targetIndex] = uploadedData.url;
-          return updatedImgs;
-        });
+        setTourImages(prevImgs => prevImgs.map(img => img === tempId ? uploadedData.url : img));
         toast({
           title: "Фото загружено!",
           description: `${currentFile.name} добавлено`
         });
       } catch (uploadError) {
-        setTourImages(prevImgs => prevImgs.filter((_, idx) => idx !== targetIndex));
+        setTourImages(prevImgs => prevImgs.filter(img => img !== tempId));
         toast({
           title: "Ошибка загрузки",
           description: uploadError instanceof Error ? uploadError.message : "Попробуйте еще раз",
@@ -243,7 +229,7 @@ export default function GuideDashboard() {
       } finally {
         setUploadingImages(prevSet => {
           const newSet = new Set(prevSet);
-          newSet.delete(targetIndex);
+          newSet.delete(newSet.size - 1);
           return newSet;
         });
       }
@@ -271,17 +257,8 @@ export default function GuideDashboard() {
       return;
     }
 
-    const hasDataUrls = tourImages.some(url => url.startsWith('data:'));
-    if (hasDataUrls) {
-      toast({
-        title: "Дождитесь загрузки фото",
-        description: "Некоторые фотографии еще загружаются на сервер",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (uploadingImages.size > 0) {
+    const hasUploadingImages = tourImages.some(url => url.startsWith('temp_'));
+    if (hasUploadingImages || uploadingImages.size > 0) {
       toast({
         title: "Дождитесь загрузки фото",
         description: "Фотографии еще загружаются на сервер",
