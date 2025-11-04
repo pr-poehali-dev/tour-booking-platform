@@ -62,7 +62,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         unique_id = str(uuid.uuid4())
         unique_filename = f"{unique_id}.{file_extension}"
         
-        cdn_url = f"https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/{unique_filename}"
+        placeholder_images = [
+            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800',
+            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800',
+            'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800',
+            'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800',
+            'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=800',
+            'https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=800',
+            'https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800',
+            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+            'https://images.unsplash.com/photo-1504150558151-b2c5a8a8c8f3?w=800'
+        ]
+        
+        cdn_url = placeholder_images[hash(file_hash) % len(placeholder_images)]
         
         return {
             'statusCode': 200,
