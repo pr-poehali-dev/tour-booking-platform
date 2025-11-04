@@ -346,73 +346,8 @@ export default function GuideDashboard() {
     }
   };
 
-  const [tours, setTours] = useState([
-    {
-      id: 1,
-      title: 'Экскурсия по Красной площади',
-      city: 'Москва',
-      country: 'Россия',
-      price: 3500,
-      duration: '3 часа',
-      image: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=400',
-      image_url: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=400',
-      rating: 4.8,
-      bookings: 45,
-      status: 'active'
-    },
-    {
-      id: 2,
-      title: 'Ночная Москва',
-      city: 'Москва',
-      country: 'Россия',
-      price: 4200,
-      duration: '4 часа',
-      image: 'https://images.unsplash.com/photo-1520106212299-d99c443e4568?w=400',
-      image_url: 'https://images.unsplash.com/photo-1520106212299-d99c443e4568?w=400',
-      rating: 4.9,
-      bookings: 38,
-      status: 'active'
-    }
-  ]);
-
-  const bookings = [
-    {
-      id: 1,
-      tourTitle: 'Экскурсия по Красной площади',
-      clientName: 'Иван Петров',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan',
-      date: '15 декабря 2024',
-      time: '10:00',
-      participants: 2,
-      status: 'confirmed',
-      price: 7000,
-      contactTelegram: '@ivan_petrov'
-    },
-    {
-      id: 2,
-      tourTitle: 'Ночная Москва',
-      clientName: 'Мария Сидорова',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-      date: '18 декабря 2024',
-      time: '14:00',
-      participants: 3,
-      status: 'pending',
-      price: 12600,
-      contactTelegram: '@maria_s'
-    },
-    {
-      id: 3,
-      tourTitle: 'Исторический центр Праги',
-      clientName: 'Алексей Иванов',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alexey',
-      date: '20 декабря 2024',
-      time: '11:00',
-      participants: 4,
-      status: 'confirmed',
-      price: 14000,
-      contactTelegram: '@alexey_iv'
-    }
-  ];
+  const [tours, setTours] = useState<any[]>([]);
+  const bookings: any[] = [];
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -427,35 +362,7 @@ export default function GuideDashboard() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const reviews = [
-    {
-      id: 1,
-      tourTitle: 'Экскурсия по Красной площади',
-      clientName: 'Иван Петров',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan',
-      rating: 5,
-      date: '10 декабря 2024',
-      text: 'Отличная экскурсия! Гид очень интересно рассказывал об истории Москвы.'
-    },
-    {
-      id: 2,
-      tourTitle: 'Ночная Москва',
-      clientName: 'Мария Сидорова',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-      rating: 5,
-      date: '8 декабря 2024',
-      text: 'Незабываемые впечатления! Рекомендую всем!'
-    },
-    {
-      id: 3,
-      tourTitle: 'Экскурсия по Красной площади',
-      clientName: 'Алексей Иванов',
-      clientAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alexey',
-      rating: 4,
-      date: '5 декабря 2024',
-      text: 'Хорошая экскурсия, но хотелось бы больше времени для фотографий.'
-    }
-  ];
+  const reviews: any[] = [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -792,8 +699,23 @@ export default function GuideDashboard() {
             </TabsList>
 
             <TabsContent value="tours" className="space-y-6">
-              <div className="grid gap-6">
-                {tours.map((tour) => (
+              {tours.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Icon name="MapPin" size={48} className="text-muted-foreground" />
+                    <div>
+                      <h3 className="font-heading text-xl font-semibold mb-2">Пока нет туров</h3>
+                      <p className="text-muted-foreground mb-4">Создайте свой первый тур и начните принимать бронирования</p>
+                      <Button onClick={() => setIsCreatingTour(true)}>
+                        <Icon name="Plus" size={18} className="mr-2" />
+                        Создать первый тур
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid gap-6">
+                  {tours.map((tour) => (
                   <Card key={tour.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="md:flex">
                       <div className="md:w-1/3 h-48 md:h-auto relative">
@@ -846,13 +768,25 @@ export default function GuideDashboard() {
                       </div>
                     </div>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="bookings" className="space-y-6">
-              <div className="grid gap-4">
-                {bookings.map((booking) => (
+              {bookings.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Icon name="Calendar" size={48} className="text-muted-foreground" />
+                    <div>
+                      <h3 className="font-heading text-xl font-semibold mb-2">Пока нет бронирований</h3>
+                      <p className="text-muted-foreground">Бронирования будут отображаться здесь</p>
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {bookings.map((booking) => (
                   <Card key={booking.id}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -929,13 +863,25 @@ export default function GuideDashboard() {
                       </Button>
                     </CardFooter>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="reviews" className="space-y-6">
-              <div className="grid gap-4">
-                {reviews.map((review) => (
+              {reviews.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Icon name="Star" size={48} className="text-muted-foreground" />
+                    <div>
+                      <h3 className="font-heading text-xl font-semibold mb-2">Пока нет отзывов</h3>
+                      <p className="text-muted-foreground">Отзывы от клиентов будут отображаться здесь</p>
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {reviews.map((review) => (
                   <Card key={review.id}>
                     <CardHeader>
                       <div className="flex items-start gap-4">
@@ -959,8 +905,9 @@ export default function GuideDashboard() {
                       </div>
                     </CardHeader>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="profile" className="space-y-6">

@@ -123,98 +123,11 @@ export default function ClientDashboard() {
     }
   };
 
-  const bookings = [
-    {
-      id: 1,
-      tourTitle: 'Исторический центр Праги',
-      tourImage: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg',
-      city: 'Прага',
-      country: 'Чехия',
-      date: '15 декабря 2024',
-      status: 'upcoming',
-      price: 3500,
-      guide: 'Анна Новикова',
-      guideAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anna',
-      participants: 2
-    },
-    {
-      id: 2,
-      tourTitle: 'Горный поход в Альпах',
-      tourImage: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/cd6e6544-d11b-4b3d-b500-bd94c90cbc08.jpg',
-      city: 'Инсбрук',
-      country: 'Австрия',
-      date: '22 января 2025',
-      status: 'confirmed',
-      price: 15000,
-      guide: 'Михаил Петров',
-      guideAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mikhail',
-      participants: 4
-    },
-    {
-      id: 3,
-      tourTitle: 'Средиземноморское побережье',
-      tourImage: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/d83244a1-dd1c-448a-8abc-9c02416fbff3.jpg',
-      city: 'Барселона',
-      country: 'Испания',
-      date: '10 октября 2024',
-      status: 'completed',
-      price: 25000,
-      guide: 'Елена Соколова',
-      guideAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena',
-      participants: 2,
-      rating: 5
-    },
-    {
-      id: 4,
-      tourTitle: 'Пражский Град и замки',
-      tourImage: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg',
-      city: 'Прага',
-      country: 'Чехия',
-      date: '5 сентября 2024',
-      status: 'completed',
-      price: 4200,
-      guide: 'Анна Новикова',
-      guideAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anna',
-      participants: 3,
-      rating: 4
-    }
-  ];
-
-  const favorites = [
-    {
-      id: 5,
-      title: 'Велосипедный тур по набережной',
-      city: 'Прага',
-      country: 'Чехия',
-      price: 2800,
-      rating: 4.9,
-      reviews: 156,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/cd6e6544-d11b-4b3d-b500-bd94c90cbc08.jpg',
-      duration: '4 часа'
-    },
-    {
-      id: 6,
-      title: 'Гастрономический тур',
-      city: 'Прага',
-      country: 'Чехия',
-      price: 5500,
-      rating: 5.0,
-      reviews: 203,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/d83244a1-dd1c-448a-8abc-9c02416fbff3.jpg',
-      duration: '5 часов'
-    },
-    {
-      id: 7,
-      title: 'Ночная Прага',
-      city: 'Прага',
-      country: 'Чехия',
-      price: 3200,
-      rating: 4.8,
-      reviews: 98,
-      image: 'https://cdn.poehali.dev/projects/b1188c50-41f2-4090-868c-d1ee76f9086f/files/ccd38c6a-3856-42af-b730-29c8aa56c8ea.jpg',
-      duration: '3 часа'
-    }
-  ];
+  const bookings: any[] = [];
+  const favorites: any[] = [];
+  
+  const upcomingBookings = bookings.filter((b: any) => b.status === 'upcoming' || b.status === 'confirmed');
+  const completedBookings = bookings.filter((b: any) => b.status === 'completed');
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -331,11 +244,29 @@ export default function ClientDashboard() {
               </TabsList>
 
               <TabsContent value="bookings" className="space-y-6">
-                {upcomingBookings.length > 0 && (
-                  <div>
-                    <h2 className="text-2xl font-heading font-semibold mb-4">Предстоящие туры</h2>
-                    <div className="grid gap-6">
-                      {upcomingBookings.map((booking) => (
+                {bookings.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Icon name="Calendar" size={48} className="text-muted-foreground" />
+                      <div>
+                        <h3 className="font-heading text-xl font-semibold mb-2">Пока нет бронирований</h3>
+                        <p className="text-muted-foreground mb-4">Исследуйте наши туры и забронируйте свое первое приключение</p>
+                        <Button asChild>
+                          <Link to="/">
+                            <Icon name="Search" size={18} className="mr-2" />
+                            Найти туры
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <>
+                    {upcomingBookings.length > 0 && (
+                      <div>
+                        <h2 className="text-2xl font-heading font-semibold mb-4">Предстоящие туры</h2>
+                        <div className="grid gap-6">
+                          {upcomingBookings.map((booking) => (
                         <Card key={booking.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                           <div className="md:flex">
                             <div className="md:w-1/3 h-48 md:h-auto">
@@ -477,15 +408,35 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                 )}
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="favorites" className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-heading font-semibold">
-                    Избранное ({favorites.length})
-                  </h2>
-                  <Button variant="outline" asChild>
-                    <Link to="/">
+                {favorites.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Icon name="Heart" size={48} className="text-muted-foreground" />
+                      <div>
+                        <h3 className="font-heading text-xl font-semibold mb-2">Избранное пусто</h3>
+                        <p className="text-muted-foreground mb-4">Добавьте туры в избранное, чтобы они отображались здесь</p>
+                        <Button asChild>
+                          <Link to="/">
+                            <Icon name="Search" size={18} className="mr-2" />
+                            Найти туры
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-heading font-semibold">
+                        Избранное ({favorites.length})
+                      </h2>
+                      <Button variant="outline" asChild>
+                        <Link to="/">
                       <Icon name="Plus" size={18} className="mr-2" />
                       Найти туры
                     </Link>
@@ -534,15 +485,29 @@ export default function ClientDashboard() {
                     </Card>
                   ))}
                 </div>
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="reviews" className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-heading font-semibold">Мои отзывы</h2>
-                </div>
+                {completedBookings.filter((b: any) => b.rating).length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Icon name="Star" size={48} className="text-muted-foreground" />
+                      <div>
+                        <h3 className="font-heading text-xl font-semibold mb-2">Пока нет отзывов</h3>
+                        <p className="text-muted-foreground">Оставьте отзыв после завершения тура</p>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-heading font-semibold">Мои отзывы</h2>
+                    </div>
 
-                <div className="space-y-4">
-                  {completedBookings.filter(b => b.rating).map((booking) => (
+                    <div className="space-y-4">
+                      {completedBookings.filter((b: any) => b.rating).map((booking: any) => (
                     <Card key={booking.id}>
                       <CardHeader>
                         <div className="flex items-start justify-between">
@@ -601,7 +566,9 @@ export default function ClientDashboard() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="profile" className="space-y-6">
