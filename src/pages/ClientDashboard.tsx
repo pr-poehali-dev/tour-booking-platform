@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
+import { profileApi } from '@/lib/profileApi';
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
@@ -19,13 +20,22 @@ export default function ClientDashboard() {
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
   const [user, setUser] = useState({
+    id: 0,
     name: 'Иван Петров',
     email: 'ivan.petrov@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan',
+    phone: '',
+    telegram: '',
+    city: '',
+    bio: '',
+    interests: '',
+    email_notifications: true,
+    telegram_notifications: false,
     memberSince: 'Октябрь 2023',
     totalBookings: 12,
     totalSpent: 145000
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -41,19 +51,76 @@ export default function ClientDashboard() {
     }
 
     setUser({
+      id: userData.id || 0,
       name: userData.name || 'Пользователь',
       email: userData.email || '',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name || 'User'}`,
+      phone: '',
+      telegram: '',
+      city: '',
+      bio: '',
+      interests: '',
+      email_notifications: true,
+      telegram_notifications: false,
       memberSince: 'Октябрь 2023',
       totalBookings: 12,
       totalSpent: 145000
     });
+
+    if (userData.id) {
+      profileApi.getProfile(userData.id).then(profile => {
+        setUser(prev => ({
+          ...prev,
+          phone: profile.phone || '',
+          telegram: profile.telegram || '',
+          city: profile.city || '',
+          bio: profile.bio || '',
+          interests: profile.interests || '',
+          email_notifications: profile.email_notifications ?? true,
+          telegram_notifications: profile.telegram_notifications ?? false
+        }));
+      }).catch(console.error);
+    }
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/');
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user.name || !user.email) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await profileApi.updateProfile({
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        telegram: user.telegram,
+        city: user.city,
+        bio: user.bio,
+        interests: user.interests,
+        email_notifications: user.email_notifications,
+        telegram_notifications: user.telegram_notifications
+      });
+
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        userData.name = user.name;
+        userData.email = user.email;
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const bookings = [
@@ -591,6 +658,8 @@ export default function ClientDashboard() {
                           id="clientPhone" 
                           type="tel"
                           placeholder="+7 (999) 123-45-67"
+                          value={user.phone}
+                          onChange={(e) => setUser({...user, phone: e.target.value})}
                         />
                       </div>
                       <div>
@@ -598,6 +667,8 @@ export default function ClientDashboard() {
                         <Input 
                           id="clientTelegram" 
                           placeholder="@username"
+                          value={user.telegram}
+                          onChange={(e) => setUser({...user, telegram: e.target.value})}
                         />
                       </div>
                     </div>
@@ -607,6 +678,8 @@ export default function ClientDashboard() {
                       <Input 
                         id="clientCity" 
                         placeholder="Москва"
+                        value={user.city}
+                        onChange={(e) => setUser({...user, city: e.target.value})}
                       />
                     </div>
 
@@ -616,6 +689,8 @@ export default function ClientDashboard() {
                         id="clientBio" 
                         placeholder="Расскажите о своих интересах, хобби, опыте путешествий..."
                         rows={4}
+                        value={user.bio}
+                        onChange={(e) => setUser({...user, bio: e.target.value})}
                       />
                     </div>
 
@@ -624,6 +699,8 @@ export default function ClientDashboard() {
                       <Input 
                         id="clientInterests" 
                         placeholder="История, архитектура, гастрономия, активный отдых"
+                        value={user.interests}
+                        onChange={(e) => setUser({...user, interests: e.target.value})}
                       />
                     </div>
 
@@ -636,25 +713,44 @@ export default function ClientDashboard() {
                           <p className="font-medium">Email уведомления</p>
                           <p className="text-sm text-muted-foreground">Получать письма о новых бронированиях</p>
                         </div>
-                        <input type="checkbox" className="toggle" defaultChecked />
+                        <input 
+                          type="checkbox" 
+                          className="toggle" 
+                          checked={user.email_notifications}
+                          onChange={(e) => setUser({...user, email_notifications: e.target.checked})}
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">Telegram уведомления</p>
                           <p className="text-sm text-muted-foreground">Получать сообщения в Telegram</p>
                         </div>
-                        <input type="checkbox" className="toggle" />
+                        <input 
+                          type="checkbox" 
+                          className="toggle"
+                          checked={user.telegram_notifications}
+                          onChange={(e) => setUser({...user, telegram_notifications: e.target.checked})}
+                        />
                       </div>
                     </div>
 
                     <Separator />
 
                     <div className="flex gap-3">
-                      <Button className="flex-1">
-                        <Icon name="Save" size={18} className="mr-2" />
-                        Сохранить изменения
+                      <Button className="flex-1" onClick={handleSaveProfile} disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Save" size={18} className="mr-2" />
+                            Сохранить изменения
+                          </>
+                        )}
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => setActiveTab('bookings')}>
                         Отмена
                       </Button>
                     </div>

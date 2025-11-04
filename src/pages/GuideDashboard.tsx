@@ -19,6 +19,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { bookingApi } from '@/lib/bookingApi';
 import { toursApi, CreateTourData } from '@/lib/toursApi';
 import { uploadApi } from '@/lib/uploadApi';
+import { profileApi } from '@/lib/profileApi';
 import { useToast } from '@/hooks/use-toast';
 
 export default function GuideDashboard() {
@@ -46,9 +47,17 @@ export default function GuideDashboard() {
   });
 
   const [guide, setGuide] = useState({
+    id: 0,
     name: 'Анна Новикова',
     email: 'anna.novikova@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anna',
+    phone: '',
+    telegram: '',
+    city: '',
+    bio: '',
+    languages: '',
+    experience_years: 0,
+    specialization: '',
     rating: 4.9,
     totalTours: 23,
     totalReviews: 342,
@@ -70,21 +79,92 @@ export default function GuideDashboard() {
     }
 
     setGuide({
+      id: userData.id || 0,
       name: userData.name || 'Гид',
       email: userData.email || '',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name || 'Guide'}`,
+      phone: '',
+      telegram: '',
+      city: '',
+      bio: '',
+      languages: '',
+      experience_years: 0,
+      specialization: '',
       rating: 4.9,
       totalTours: 23,
       totalReviews: 342,
       totalEarnings: 458000,
       memberSince: 'Январь 2022'
     });
+    
+    if (userData.id) {
+      profileApi.getProfile(userData.id).then(profile => {
+        setGuide(prev => ({
+          ...prev,
+          phone: profile.phone || '',
+          telegram: profile.telegram || '',
+          city: profile.city || '',
+          bio: profile.bio || '',
+          languages: profile.languages || '',
+          experience_years: profile.experience_years || 0,
+          specialization: profile.specialization || ''
+        }));
+      }).catch(console.error);
+    }
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/');
+  };
+
+  const handleSaveProfile = async () => {
+    if (!guide.name || !guide.email) {
+      toast({
+        title: "Заполните обязательные поля",
+        description: "Имя и email обязательны для заполнения",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await profileApi.updateProfile({
+        user_id: guide.id,
+        name: guide.name,
+        email: guide.email,
+        phone: guide.phone,
+        telegram: guide.telegram,
+        city: guide.city,
+        bio: guide.bio,
+        languages: guide.languages,
+        experience_years: guide.experience_years,
+        specialization: guide.specialization
+      });
+
+      toast({
+        title: "Профиль обновлён!",
+        description: "Ваши данные успешно сохранены"
+      });
+
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        userData.name = guide.name;
+        userData.email = guide.email;
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1004,6 +1084,8 @@ export default function GuideDashboard() {
                           id="guidePhone" 
                           type="tel"
                           placeholder="+7 (999) 123-45-67"
+                          value={guide.phone}
+                          onChange={(e) => setGuide({...guide, phone: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1011,6 +1093,8 @@ export default function GuideDashboard() {
                         <Input 
                           id="guideTelegram" 
                           placeholder="@username"
+                          value={guide.telegram}
+                          onChange={(e) => setGuide({...guide, telegram: e.target.value})}
                         />
                       </div>
                     </div>
@@ -1020,6 +1104,8 @@ export default function GuideDashboard() {
                       <Input 
                         id="guideCity" 
                         placeholder="Москва"
+                        value={guide.city}
+                        onChange={(e) => setGuide({...guide, city: e.target.value})}
                       />
                     </div>
 
@@ -1029,6 +1115,8 @@ export default function GuideDashboard() {
                         id="guideBio" 
                         placeholder="Расскажите о своём опыте работы гидом, интересах, специализации..."
                         rows={5}
+                        value={guide.bio}
+                        onChange={(e) => setGuide({...guide, bio: e.target.value})}
                       />
                     </div>
 
@@ -1037,6 +1125,8 @@ export default function GuideDashboard() {
                       <Input 
                         id="guideLanguages" 
                         placeholder="Русский, Английский, Испанский"
+                        value={guide.languages}
+                        onChange={(e) => setGuide({...guide, languages: e.target.value})}
                       />
                     </div>
 
@@ -1046,6 +1136,8 @@ export default function GuideDashboard() {
                         id="guideExperience" 
                         type="number"
                         placeholder="5"
+                        value={guide.experience_years || ''}
+                        onChange={(e) => setGuide({...guide, experience_years: parseInt(e.target.value) || 0})}
                       />
                     </div>
 
@@ -1055,17 +1147,28 @@ export default function GuideDashboard() {
                         id="guideSpecialization" 
                         placeholder="Исторические туры, гастрономические экскурсии, походы..."
                         rows={3}
+                        value={guide.specialization}
+                        onChange={(e) => setGuide({...guide, specialization: e.target.value})}
                       />
                     </div>
 
                     <Separator />
 
                     <div className="flex gap-3">
-                      <Button className="flex-1">
-                        <Icon name="Save" size={18} className="mr-2" />
-                        Сохранить изменения
+                      <Button className="flex-1" onClick={handleSaveProfile} disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Icon name="Loader2" size={18} className="mr-2 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Save" size={18} className="mr-2" />
+                            Сохранить изменения
+                          </>
+                        )}
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => setActiveTab('tours')}>
                         Отмена
                       </Button>
                     </div>
