@@ -375,14 +375,6 @@ export default function GuideDashboard() {
     }
   ]);
 
-  useEffect(() => {
-    toursApi.getToursByGuide(guide.id).then(fetchedTours => {
-      if (fetchedTours.length > 0) {
-        setTours(fetchedTours);
-      }
-    }).catch(console.error);
-  }, [guide.id]);
-
   const bookings = [
     {
       id: 1,
