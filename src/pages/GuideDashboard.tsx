@@ -632,15 +632,17 @@ export default function GuideDashboard() {
               <div>
                 <Label htmlFor="images">Фотографии тура * (от 5 до 15 фото)</Label>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Загрузите качественные фотографии (до 5 МБ каждая). Минимум 5, максимум 15 фото.
+                  Вставьте ссылки на изображения (по одной на строку) или используйте Unsplash/Imgur
                 </p>
-                <Input 
-                  id="images" 
-                  type="file" 
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  disabled={tourImages.length >= 15 || uploadingImages.size > 0}
+                <textarea
+                  id="imageUrls"
+                  className="w-full min-h-[100px] p-2 border rounded-md"
+                  placeholder="https://images.unsplash.com/photo-example1&#10;https://images.unsplash.com/photo-example2&#10;..."
+                  value={tourImages.join('\n')}
+                  onChange={(e) => {
+                    const urls = e.target.value.split('\n').filter(url => url.trim()).slice(0, 15);
+                    setTourImages(urls);
+                  }}
                 />
                 {tourImages.length > 0 && tourImages.length < 5 && (
                   <p className="text-sm text-amber-600 mt-2">
