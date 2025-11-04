@@ -18,6 +18,14 @@ export default function Index() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    }
+  }, []);
 
   useEffect(() => {
     loadTours();
@@ -80,12 +88,22 @@ export default function Index() {
               <a href="#contacts" className="text-foreground hover:text-primary transition-colors">Контакты</a>
             </nav>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild>
-                <Link to="/login">Вход</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/register">Регистрация</Link>
-              </Button>
+              {user ? (
+                <Button asChild>
+                  <Link to={user.role === 'guide' ? '/guide-dashboard' : user.role === 'admin' ? '/admin-dashboard' : '/client-dashboard'}>
+                    Личный кабинет
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link to="/login">Вход</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/register">Регистрация</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -488,7 +506,12 @@ export default function Index() {
                     className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background resize-none"
                     placeholder="Ваше сообщение"
                   ></textarea>
-                  <Button className="w-full">Отправить сообщение</Button>
+                  <Button 
+                    className="w-full"
+                    onClick={() => alert('Спасибо за сообщение! Мы свяжемся с вами в ближайшее время.')}
+                  >
+                    Отправить сообщение
+                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -512,9 +535,9 @@ export default function Index() {
             <div>
               <h4 className="font-heading font-semibold mb-4">Для туристов</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Каталог туров</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Как забронировать</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Личный кабинет</a></li>
+                <li><Link to="/" className="hover:text-white transition-colors">Каталог туров</Link></li>
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">Как забронировать</a></li>
+                <li><Link to="/client-dashboard" className="hover:text-white transition-colors">Личный кабинет</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Отзывы</a></li>
               </ul>
             </div>
@@ -522,19 +545,19 @@ export default function Index() {
             <div>
               <h4 className="font-heading font-semibold mb-4">Для гидов</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Стать гидом</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Добавить тур</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Кабинет гида</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Помощь</a></li>
+                <li><Link to="/register" className="hover:text-white transition-colors">Стать гидом</Link></li>
+                <li><Link to="/guide-dashboard" className="hover:text-white transition-colors">Добавить тур</Link></li>
+                <li><Link to="/guide-dashboard" className="hover:text-white transition-colors">Кабинет гида</Link></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">Помощь</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-heading font-semibold mb-4">О компании</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">О нас</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Блог</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Контакты</a></li>
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">О нас</a></li>
+                <li><a href="#blog" className="hover:text-white transition-colors">Блог</a></li>
+                <li><a href="#contacts" className="hover:text-white transition-colors">Контакты</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Вакансии</a></li>
               </ul>
             </div>
