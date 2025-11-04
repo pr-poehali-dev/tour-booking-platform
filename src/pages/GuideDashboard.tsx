@@ -33,6 +33,7 @@ export default function GuideDashboard() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadingIndexes, setUploadingIndexes] = useState<Set<number>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  
   const [newTourData, setNewTourData] = useState({
     title: '',
     city: '',
