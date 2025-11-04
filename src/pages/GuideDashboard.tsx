@@ -251,7 +251,9 @@ export default function GuideDashboard() {
   };
 
   const handleCreateTour = async () => {
-    if (!newTourData.title || !newTourData.city || !newTourData.price || !newTourData.duration || !newTourData.shortDescription || !newTourData.fullDescription) {
+    const hasDuration = newTourData.durationType === 'hours' ? newTourData.duration : newTourData.durationDays;
+    
+    if (!newTourData.title || !newTourData.city || !newTourData.price || !hasDuration || !newTourData.shortDescription || !newTourData.fullDescription) {
       toast({
         title: "Заполните все обязательные поля",
         description: "Пожалуйста, заполните все поля, отмеченные звездочкой",
@@ -260,10 +262,10 @@ export default function GuideDashboard() {
       return;
     }
 
-    if (tourImages.length === 0) {
+    if (tourImages.length < 5) {
       toast({
-        title: "Загрузите фотографии",
-        description: "Необходимо добавить хотя бы одно фото тура",
+        title: "Загрузите больше фотографий",
+        description: "Необходимо добавить минимум 5 фотографий тура",
         variant: "destructive"
       });
       return;
@@ -271,9 +273,12 @@ export default function GuideDashboard() {
 
     setIsSubmitting(true);
     try {
-      let durationString = newTourData.duration;
-      if (newTourData.durationType === 'days' && newTourData.durationDays) {
-        durationString = `${newTourData.durationDays} ${parseInt(newTourData.durationDays) === 1 ? 'день' : parseInt(newTourData.durationDays) < 5 ? 'дня' : 'дней'}`;
+      let durationString = '';
+      if (newTourData.durationType === 'days') {
+        const days = parseInt(newTourData.durationDays);
+        durationString = `${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`;
+      } else {
+        durationString = newTourData.duration;
       }
 
       const tourData: CreateTourData = {
@@ -601,9 +606,9 @@ export default function GuideDashboard() {
               </div>
 
               <div>
-                <Label htmlFor="images">Фотографии тура * (до 15 фото)</Label>
+                <Label htmlFor="images">Фотографии тура * (от 5 до 15 фото)</Label>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Загрузите качественные фотографии (до 5 МБ каждая). Можно выбрать несколько.
+                  Загрузите качественные фотографии (до 5 МБ каждая). Минимум 5, максимум 15 фото.
                 </p>
                 <Input 
                   id="images" 
@@ -613,6 +618,11 @@ export default function GuideDashboard() {
                   onChange={handleImageUpload}
                   disabled={tourImages.length >= 15 || uploadingImages.size > 0}
                 />
+                {tourImages.length > 0 && tourImages.length < 5 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    Загружено {tourImages.length} из 5 минимальных фото
+                  </p>
+                )}
                 {tourImages.length > 0 && (
                   <div className="mt-4 grid grid-cols-3 gap-3">
                     {tourImages.map((imgUrl, imgIndex) => (
@@ -667,8 +677,8 @@ export default function GuideDashboard() {
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  Загружено: {tourImages.length} / 15 фото. Перетаскивайте фото для изменения порядка.
+                <p className={`text-xs mt-2 ${tourImages.length < 5 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                  Загружено: {tourImages.length} / 15 фото (минимум 5). Перетаскивайте фото для изменения порядка.
                 </p>
               </div>
 
