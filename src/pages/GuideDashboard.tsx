@@ -173,9 +173,9 @@ export default function GuideDashboard() {
     if (!files || files.length === 0) return;
 
     const currentCount = uploadedImages.length;
-    const newFilesArray = Array.from(files).slice(0, 15 - currentCount);
+    const filesToProcess = Array.from(files).slice(0, 15 - currentCount);
 
-    if (newFilesArray.length === 0) {
+    if (filesToProcess.length === 0) {
       toast({
         title: "Достигнут лимит",
         description: "Максимум 15 фотографий",
@@ -184,7 +184,9 @@ export default function GuideDashboard() {
       return;
     }
 
-    for (const file of newFilesArray) {
+    for (let i = 0; i < filesToProcess.length; i++) {
+      const file = filesToProcess[i];
+      
       if (!file.type.startsWith('image/')) {
         toast({
           title: "Неверный формат файла",
@@ -203,40 +205,44 @@ export default function GuideDashboard() {
         continue;
       }
 
-      const tempIndex = uploadedImages.length;
+      const imageIndex = uploadedImages.length + i;
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        const previewUrl = reader.result as string;
-        setUploadedImages(prev => [...prev, previewUrl]);
+        const dataUrl = reader.result as string;
+        setUploadedImages(prevImages => [...prevImages, dataUrl]);
       };
       reader.readAsDataURL(file);
 
-      setUploadingIndexes(prev => new Set(prev).add(tempIndex));
+      setUploadingIndexes(prevIndexes => {
+        const updated = new Set(prevIndexes);
+        updated.add(imageIndex);
+        return updated;
+      });
       
       try {
-        const result = await uploadApi.uploadImage(file);
-        setUploadedImages(prev => {
-          const newArr = [...prev];
-          newArr[tempIndex] = result.url;
-          return newArr;
+        const uploadResult = await uploadApi.uploadImage(file);
+        setUploadedImages(prevImages => {
+          const updatedImages = [...prevImages];
+          updatedImages[imageIndex] = uploadResult.url;
+          return updatedImages;
         });
         toast({
           title: "Фото загружено!",
           description: `${file.name} добавлено`
         });
-      } catch (error) {
-        setUploadedImages(prev => prev.filter((_, i) => i !== tempIndex));
+      } catch (err) {
+        setUploadedImages(prevImages => prevImages.filter((_, idx) => idx !== imageIndex));
         toast({
           title: "Ошибка загрузки",
-          description: error instanceof Error ? error.message : "Попробуйте еще раз",
+          description: err instanceof Error ? err.message : "Попробуйте еще раз",
           variant: "destructive"
         });
       } finally {
-        setUploadingIndexes(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tempIndex);
-          return newSet;
+        setUploadingIndexes(prevIndexes => {
+          const updated = new Set(prevIndexes);
+          updated.delete(imageIndex);
+          return updated;
         });
       }
     }
