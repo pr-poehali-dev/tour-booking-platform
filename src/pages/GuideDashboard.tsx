@@ -271,6 +271,25 @@ export default function GuideDashboard() {
       return;
     }
 
+    const hasDataUrls = tourImages.some(url => url.startsWith('data:'));
+    if (hasDataUrls) {
+      toast({
+        title: "Дождитесь загрузки фото",
+        description: "Некоторые фотографии еще загружаются на сервер",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (uploadingImages.size > 0) {
+      toast({
+        title: "Дождитесь загрузки фото",
+        description: "Фотографии еще загружаются на сервер",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let durationString = '';
@@ -284,7 +303,7 @@ export default function GuideDashboard() {
       const tourData: CreateTourData = {
         title: newTourData.title,
         city: newTourData.city,
-        country: newTourData.country,
+        country: newTourData.country || 'Россия',
         price: parseFloat(newTourData.price),
         duration: durationString,
         short_description: newTourData.shortDescription,
@@ -297,9 +316,15 @@ export default function GuideDashboard() {
         images: tourImages
       };
 
-      console.log('Creating tour with data:', tourData);
+      console.log('=== Creating tour ===');
+      console.log('Tour data:', JSON.stringify(tourData, null, 2));
+      console.log('Images count:', tourData.images?.length);
+      console.log('First image URL:', tourData.image_url);
+      
       const result = await toursApi.createTour(tourData);
-      console.log('Tour created successfully:', result);
+      
+      console.log('=== Tour created successfully ===');
+      console.log('Result:', JSON.stringify(result, null, 2));
 
       toast({
         title: "Тур создан!",
@@ -494,13 +519,16 @@ export default function GuideDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="country">Страна *</Label>
+                  <Label htmlFor="country">Страна</Label>
                   <Input 
                     id="country" 
                     placeholder="Россия"
                     value={newTourData.country}
                     onChange={(e) => setNewTourData({...newTourData, country: e.target.value})}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    По умолчанию: Россия
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="price">Цена за человека (₽) *</Label>
