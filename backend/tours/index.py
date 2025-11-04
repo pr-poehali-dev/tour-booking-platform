@@ -191,6 +191,19 @@ def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     cursor = conn.cursor()
     
+    duration_str = str(body_data['duration'])
+    duration_minutes = 0
+    if 'ч' in duration_str or 'час' in duration_str:
+        parts = duration_str.replace('ч', ' ').replace('час', ' ').split()
+        duration_minutes = int(parts[0]) * 60
+        if len(parts) > 1 and parts[1].isdigit():
+            duration_minutes += int(parts[1])
+    else:
+        try:
+            duration_minutes = int(duration_str)
+        except:
+            duration_minutes = 60
+    
     cursor.execute("""
         INSERT INTO t_p71176016_tour_booking_platfor.tours (
             title, city, price, duration, 
@@ -205,7 +218,7 @@ def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
         body_data['title'],
         body_data['city'],
         float(body_data['price']),
-        int(body_data['duration']),
+        duration_minutes,
         body_data['short_description'],
         body_data['full_description'],
         body_data.get('image_url', ''),
