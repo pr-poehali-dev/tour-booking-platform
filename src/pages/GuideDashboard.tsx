@@ -207,32 +207,42 @@ export default function GuideDashboard() {
         continue;
       }
 
-      const tempId = `temp_${Date.now()}_${fileIdx}`;
+      const fileReaderInstance = new FileReader();
+      fileReaderInstance.onloadend = async () => {
+        const previewDataUrl = fileReaderInstance.result as string;
+        const imageIndex = tourImages.length;
+        
+        setTourImages(prevImgs => [...prevImgs, previewDataUrl]);
+        setUploadingImages(prevSet => new Set(prevSet).add(imageIndex));
+        
+        try {
+          const uploadedData = await uploadApi.uploadImage(currentFile);
+          setTourImages(prevImgs => {
+            const updatedImgs = [...prevImgs];
+            updatedImgs[imageIndex] = uploadedData.url;
+            return updatedImgs;
+          });
+          toast({
+            title: "Фото загружено!",
+            description: `${currentFile.name} добавлено`
+          });
+        } catch (uploadError) {
+          setTourImages(prevImgs => prevImgs.filter((_, idx) => idx !== imageIndex));
+          toast({
+            title: "Ошибка загрузки",
+            description: uploadError instanceof Error ? uploadError.message : "Попробуйте еще раз",
+            variant: "destructive"
+          });
+        } finally {
+          setUploadingImages(prevSet => {
+            const newSet = new Set(prevSet);
+            newSet.delete(imageIndex);
+            return newSet;
+          });
+        }
+      };
       
-      setTourImages(prevImgs => [...prevImgs, tempId]);
-      setUploadingImages(prevSet => new Set(prevSet).add(prevSet.size));
-      
-      try {
-        const uploadedData = await uploadApi.uploadImage(currentFile);
-        setTourImages(prevImgs => prevImgs.map(img => img === tempId ? uploadedData.url : img));
-        toast({
-          title: "Фото загружено!",
-          description: `${currentFile.name} добавлено`
-        });
-      } catch (uploadError) {
-        setTourImages(prevImgs => prevImgs.filter(img => img !== tempId));
-        toast({
-          title: "Ошибка загрузки",
-          description: uploadError instanceof Error ? uploadError.message : "Попробуйте еще раз",
-          variant: "destructive"
-        });
-      } finally {
-        setUploadingImages(prevSet => {
-          const newSet = new Set(prevSet);
-          newSet.delete(newSet.size - 1);
-          return newSet;
-        });
-      }
+      fileReaderInstance.readAsDataURL(currentFile);
     }
   };
 
@@ -257,11 +267,20 @@ export default function GuideDashboard() {
       return;
     }
 
-    const hasUploadingImages = tourImages.some(url => url.startsWith('temp_'));
-    if (hasUploadingImages || uploadingImages.size > 0) {
+    if (uploadingImages.size > 0) {
       toast({
         title: "Дождитесь загрузки фото",
         description: "Фотографии еще загружаются на сервер",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const hasDataUrls = tourImages.some(url => url.startsWith('data:'));
+    if (hasDataUrls) {
+      toast({
+        title: "Дождитесь загрузки фото",
+        description: "Некоторые фотографии еще загружаются на сервер",
         variant: "destructive"
       });
       return;
