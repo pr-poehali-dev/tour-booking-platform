@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import ChatWidget from '@/components/ChatWidget';
 import NotificationBell from '@/components/NotificationBell';
@@ -241,7 +244,7 @@ export default function ClientDashboard() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsList className="grid w-full grid-cols-4 mb-8">
                 <TabsTrigger value="bookings" className="flex items-center gap-2">
                   <Icon name="Calendar" size={18} />
                   <span>Мои бронирования</span>
@@ -253,6 +256,10 @@ export default function ClientDashboard() {
                 <TabsTrigger value="reviews" className="flex items-center gap-2">
                   <Icon name="Star" size={18} />
                   <span>Отзывы</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-2">
+                  <Icon name="User" size={18} />
+                  <span>Профиль</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -528,6 +535,131 @@ export default function ClientDashboard() {
                     </Card>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="profile" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-heading text-2xl">Настройки профиля</CardTitle>
+                    <CardDescription>
+                      Заполните информацию о себе для удобного общения с гидами
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center gap-6">
+                      <Avatar className="w-24 h-24">
+                        <AvatarImage src={user.avatar} />
+                        <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <Label>Фото профиля</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Загрузите свою фотографию
+                        </p>
+                        <Input type="file" accept="image/*" />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="clientName">Имя и фамилия *</Label>
+                        <Input 
+                          id="clientName" 
+                          placeholder="Иван Петров"
+                          value={user.name}
+                          onChange={(e) => setUser({...user, name: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="clientEmail">Email *</Label>
+                        <Input 
+                          id="clientEmail" 
+                          type="email"
+                          placeholder="ivan@example.com"
+                          value={user.email}
+                          onChange={(e) => setUser({...user, email: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="clientPhone">Телефон</Label>
+                        <Input 
+                          id="clientPhone" 
+                          type="tel"
+                          placeholder="+7 (999) 123-45-67"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="clientTelegram">Telegram</Label>
+                        <Input 
+                          id="clientTelegram" 
+                          placeholder="@username"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="clientCity">Город</Label>
+                      <Input 
+                        id="clientCity" 
+                        placeholder="Москва"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="clientBio">О себе (необязательно)</Label>
+                      <Textarea 
+                        id="clientBio" 
+                        placeholder="Расскажите о своих интересах, хобби, опыте путешествий..."
+                        rows={4}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="clientInterests">Интересы</Label>
+                      <Input 
+                        id="clientInterests" 
+                        placeholder="История, архитектура, гастрономия, активный отдых"
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h3 className="font-semibold">Уведомления</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">Email уведомления</p>
+                          <p className="text-sm text-muted-foreground">Получать письма о новых бронированиях</p>
+                        </div>
+                        <input type="checkbox" className="toggle" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">Telegram уведомления</p>
+                          <p className="text-sm text-muted-foreground">Получать сообщения в Telegram</p>
+                        </div>
+                        <input type="checkbox" className="toggle" />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex gap-3">
+                      <Button className="flex-1">
+                        <Icon name="Save" size={18} className="mr-2" />
+                        Сохранить изменения
+                      </Button>
+                      <Button variant="outline">
+                        Отмена
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>

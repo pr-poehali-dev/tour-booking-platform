@@ -31,6 +31,7 @@ export default function GuideDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadingIndexes, setUploadingIndexes] = useState<Set<number>>(new Set());
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [newTourData, setNewTourData] = useState({
     title: '',
     city: '',
@@ -565,11 +566,28 @@ export default function GuideDashboard() {
                         {uploadedImages.length > 0 && (
                           <div className="mt-4 grid grid-cols-3 gap-3">
                             {uploadedImages.map((url, index) => (
-                              <div key={index} className="relative group">
+                              <div 
+                                key={index} 
+                                className="relative group cursor-move"
+                                draggable={!uploadingIndexes.has(index)}
+                                onDragStart={() => setDraggedIndex(index)}
+                                onDragEnd={() => setDraggedIndex(null)}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  if (draggedIndex !== null && draggedIndex !== index) {
+                                    const newImages = [...uploadedImages];
+                                    const draggedItem = newImages[draggedIndex];
+                                    newImages.splice(draggedIndex, 1);
+                                    newImages.splice(index, 0, draggedItem);
+                                    setUploadedImages(newImages);
+                                    setDraggedIndex(index);
+                                  }
+                                }}
+                              >
                                 <img 
                                   src={url} 
                                   alt={`Фото ${index + 1}`} 
-                                  className="w-full h-32 object-cover rounded-lg border"
+                                  className={`w-full h-32 object-cover rounded-lg border transition-opacity ${draggedIndex === index ? 'opacity-50' : ''}`}
                                 />
                                 {uploadingIndexes.has(index) && (
                                   <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
@@ -600,7 +618,7 @@ export default function GuideDashboard() {
                           </div>
                         )}
                         <p className="text-xs text-muted-foreground mt-2">
-                          Загружено: {uploadedImages.length} / 15 фото
+                          Загружено: {uploadedImages.length} / 15 фото. Перетаскивайте фото для изменения порядка.
                         </p>
                       </div>
 
@@ -650,7 +668,7 @@ export default function GuideDashboard() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsList className="grid w-full grid-cols-4 mb-8">
                 <TabsTrigger value="tours" className="flex items-center gap-2">
                   <Icon name="MapPin" size={18} />
                   <span>Мои туры</span>
@@ -662,6 +680,10 @@ export default function GuideDashboard() {
                 <TabsTrigger value="reviews" className="flex items-center gap-2">
                   <Icon name="Star" size={18} />
                   <span>Отзывы</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-2">
+                  <Icon name="User" size={18} />
+                  <span>Профиль</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -926,6 +948,129 @@ export default function GuideDashboard() {
                     </Card>
                   ))}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="profile" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-heading text-2xl">Настройки профиля</CardTitle>
+                    <CardDescription>
+                      Заполните информацию о себе, чтобы клиенты могли узнать вас лучше
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-center gap-6">
+                      <Avatar className="w-24 h-24">
+                        <AvatarImage src={guide.avatar} />
+                        <AvatarFallback>{guide.name.split(' ').map(n => n[0]).join('').toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <Label>Фото профиля</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Загрузите свою фотографию
+                        </p>
+                        <Input type="file" accept="image/*" />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="guideName">Имя и фамилия *</Label>
+                        <Input 
+                          id="guideName" 
+                          placeholder="Анна Новикова"
+                          value={guide.name}
+                          onChange={(e) => setGuide({...guide, name: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="guideEmail">Email *</Label>
+                        <Input 
+                          id="guideEmail" 
+                          type="email"
+                          placeholder="anna@example.com"
+                          value={guide.email}
+                          onChange={(e) => setGuide({...guide, email: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="guidePhone">Телефон</Label>
+                        <Input 
+                          id="guidePhone" 
+                          type="tel"
+                          placeholder="+7 (999) 123-45-67"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="guideTelegram">Telegram</Label>
+                        <Input 
+                          id="guideTelegram" 
+                          placeholder="@username"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="guideCity">Город</Label>
+                      <Input 
+                        id="guideCity" 
+                        placeholder="Москва"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="guideBio">О себе</Label>
+                      <Textarea 
+                        id="guideBio" 
+                        placeholder="Расскажите о своём опыте работы гидом, интересах, специализации..."
+                        rows={5}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="guideLanguages">Языки</Label>
+                      <Input 
+                        id="guideLanguages" 
+                        placeholder="Русский, Английский, Испанский"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="guideExperience">Опыт работы (лет)</Label>
+                      <Input 
+                        id="guideExperience" 
+                        type="number"
+                        placeholder="5"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="guideSpecialization">Специализация</Label>
+                      <Textarea 
+                        id="guideSpecialization" 
+                        placeholder="Исторические туры, гастрономические экскурсии, походы..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex gap-3">
+                      <Button className="flex-1">
+                        <Icon name="Save" size={18} className="mr-2" />
+                        Сохранить изменения
+                      </Button>
+                      <Button variant="outline">
+                        Отмена
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
