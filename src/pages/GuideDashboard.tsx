@@ -40,6 +40,8 @@ export default function GuideDashboard() {
     country: '',
     price: '',
     duration: '',
+    durationType: 'hours',
+    durationDays: '',
     shortDescription: '',
     fullDescription: '',
     groupSize: '',
@@ -269,12 +271,17 @@ export default function GuideDashboard() {
 
     setIsSubmitting(true);
     try {
+      let durationString = newTourData.duration;
+      if (newTourData.durationType === 'days' && newTourData.durationDays) {
+        durationString = `${newTourData.durationDays} ${parseInt(newTourData.durationDays) === 1 ? 'день' : parseInt(newTourData.durationDays) < 5 ? 'дня' : 'дней'}`;
+      }
+
       const tourData: CreateTourData = {
         title: newTourData.title,
         city: newTourData.city,
         country: newTourData.country,
         price: parseFloat(newTourData.price),
-        duration: newTourData.duration,
+        duration: durationString,
         short_description: newTourData.shortDescription,
         full_description: newTourData.fullDescription,
         group_size: newTourData.groupSize ? parseInt(newTourData.groupSize) : 10,
@@ -285,7 +292,9 @@ export default function GuideDashboard() {
         images: tourImages
       };
 
-      await toursApi.createTour(tourData);
+      console.log('Creating tour with data:', tourData);
+      const result = await toursApi.createTour(tourData);
+      console.log('Tour created successfully:', result);
 
       toast({
         title: "Тур создан!",
@@ -299,6 +308,8 @@ export default function GuideDashboard() {
         country: '',
         price: '',
         duration: '',
+        durationType: 'hours',
+        durationDays: '',
         shortDescription: '',
         fullDescription: '',
         groupSize: '',
@@ -308,6 +319,7 @@ export default function GuideDashboard() {
       setTourImages([]);
       setActiveTab('tours');
     } catch (error) {
+      console.error('Error creating tour:', error);
       toast({
         title: "Ошибка создания тура",
         description: error instanceof Error ? error.message : "Попробуйте еще раз",
@@ -497,25 +509,56 @@ export default function GuideDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="duration">Продолжительность *</Label>
-                  <Input 
-                    id="duration" 
-                    placeholder="3 часа"
-                    value={newTourData.duration}
-                    onChange={(e) => setNewTourData({...newTourData, duration: e.target.value})}
-                  />
+                  <Label>Тип тура *</Label>
+                  <Select 
+                    value={newTourData.durationType} 
+                    onValueChange={(value) => setNewTourData({...newTourData, durationType: value, duration: '', durationDays: ''})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hours">Однодневный тур</SelectItem>
+                      <SelectItem value="days">Многодневный тур</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label htmlFor="groupSize">Размер группы</Label>
-                  <Input 
-                    id="groupSize" 
-                    type="number" 
-                    placeholder="10"
-                    value={newTourData.groupSize}
-                    onChange={(e) => setNewTourData({...newTourData, groupSize: e.target.value})}
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="duration">
+                      {newTourData.durationType === 'hours' ? 'Продолжительность *' : 'Количество дней *'}
+                    </Label>
+                    {newTourData.durationType === 'hours' ? (
+                      <Input 
+                        id="duration" 
+                        placeholder="3 часа или 2ч 30м"
+                        value={newTourData.duration}
+                        onChange={(e) => setNewTourData({...newTourData, duration: e.target.value})}
+                      />
+                    ) : (
+                      <Input 
+                        id="durationDays" 
+                        type="number"
+                        min="1"
+                        placeholder="5"
+                        value={newTourData.durationDays}
+                        onChange={(e) => setNewTourData({...newTourData, durationDays: e.target.value, duration: e.target.value})}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="groupSize">Размер группы</Label>
+                    <Input 
+                      id="groupSize" 
+                      type="number" 
+                      placeholder="10"
+                      value={newTourData.groupSize}
+                      onChange={(e) => setNewTourData({...newTourData, groupSize: e.target.value})}
+                    />
+                  </div>
                 </div>
               </div>
 

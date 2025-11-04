@@ -191,13 +191,19 @@ def handle_create_tour(event: Dict[str, Any], conn) -> Dict[str, Any]:
     
     cursor = conn.cursor()
     
-    duration_str = str(body_data['duration'])
+    duration_str = str(body_data['duration']).lower()
     duration_minutes = 0
-    if 'ч' in duration_str or 'час' in duration_str:
+    
+    if 'день' in duration_str or 'дня' in duration_str or 'дней' in duration_str:
+        parts = duration_str.split()
+        if parts and parts[0].isdigit():
+            duration_minutes = int(parts[0]) * 24 * 60
+    elif 'ч' in duration_str or 'час' in duration_str:
         parts = duration_str.replace('ч', ' ').replace('час', ' ').split()
-        duration_minutes = int(parts[0]) * 60
-        if len(parts) > 1 and parts[1].isdigit():
-            duration_minutes += int(parts[1])
+        if parts and parts[0].isdigit():
+            duration_minutes = int(parts[0]) * 60
+            if len(parts) > 1 and parts[1].isdigit():
+                duration_minutes += int(parts[1])
     else:
         try:
             duration_minutes = int(duration_str)
